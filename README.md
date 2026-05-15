@@ -1,2 +1,2 @@
-# calendai
+# Calendai
 カレンダー×日記アプリ（かれんだい）
