@@ -188,6 +188,25 @@ async function fetchAllCalendars(accessToken) {
   return data.items || [];
 }
 
+async function fetchOldestEventYear(accessToken) {
+  try {
+    const res = await fetch(
+      'https://www.googleapis.com/calendar/v3/calendars/primary/events?orderBy=startTime&singleEvents=true&maxResults=20&timeMin=2006-04-01T00:00:00Z',
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+if (data.items && data.items.length > 0) {
+  const nonRecurring = data.items.filter(ev => !ev.recurringEventId);
+  if (nonRecurring.length > 0) {
+    const oldest = nonRecurring[0].start.dateTime || nonRecurring[0].start.date;
+    return new Date(oldest).getFullYear();
+  }
+}
+  } catch { }
+  return null;
+}
+
 function LockScreen({ onUnlock, theme }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
@@ -339,15 +358,143 @@ function PinSetupScreen({ onComplete, onCancel }) {
   );
 }
 
-function LoginScreen({ onLogin }) {
+function WelcomeScreen({ years, startYear, isFirst, skipWelcome, onSkipChange, onStart, theme }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { setTimeout(() => setVisible(true), 50); }, []);
+  const t = theme || THEMES.classic;
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f0ebe0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Hiragino Sans, Meiryo, sans-serif' }}>
-      <div style={{ background: '#fdfaf5', borderRadius: '14px', padding: '48px 40px', border: '0.5px solid #ddd', textAlign: 'center', width: '320px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
-        <div style={{ fontSize: '13px', letterSpacing: '.2em', color: '#aaa', marginBottom: '8px', textTransform: 'uppercase' }}>Multi Year Diary</div>
-        <div style={{ fontSize: '26px', fontWeight: '500', color: '#222', marginBottom: '6px', fontFamily: 'Georgia, serif' }}>5年日記</div>
-        <div style={{ fontSize: '12px', color: '#bbb', marginBottom: '36px' }}>Googleカレンダーの記録を<br />過去と並べて振り返る</div>
-        <button onClick={onLogin} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '0.5px solid #ddd', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '13px', color: '#333', fontWeight: '500', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-          <svg width="18" height="18" viewBox="0 0 48 48">
+    <div style={{
+      minHeight: '100vh',
+      background: t.bg,
+      display: 'flex',
+      alignItems: 'flex-start',
+      paddingTop: '30vh',
+      justifyContent: 'center',
+      fontFamily: 'Hiragino Sans, Meiryo, sans-serif',
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.3s ease',
+    }}>
+      <div style={{ width: '260px', textAlign: 'center', padding: '0 24px' }}>
+
+        {/* メインメッセージ */}
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ fontSize: '13px', color: t.monthColor, marginBottom: '16px', letterSpacing: '.05em' }}>
+            あなたには
+          </div>
+          <div style={{ fontSize: '36px', fontWeight: '300', color: t.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2, marginBottom: '4px' }}>
+            {years}年分
+          </div>
+          <div style={{ fontSize: '13px', color: t.monthColor, letterSpacing: '.05em' }}>
+            の記録があります
+          </div>
+
+          {/* 初回のみ表示 */}
+          {isFirst && startYear && (
+            <div style={{ marginTop: '24px', fontSize: '12px', color: t.subColor, lineHeight: 2, letterSpacing: '.05em' }}>
+              <div>{startYear}年から始まった</div>
+              <div>あなたのカレンダーが</div>
+              <div>5年日記になりました</div>
+            </div>
+          )}
+        </div>
+
+        {/* はじめるボタン */}
+        <button onClick={onStart} style={{
+          width: '100%',
+          padding: '12px',
+          borderRadius: '6px',
+          border: `1px solid ${t.dateColor}`,
+          background: t.pageBg,
+          cursor: 'pointer',
+          fontSize: '13px',
+          color: t.dateColor,
+          letterSpacing: '.1em',
+          marginBottom: '24px',
+          transition: 'opacity 0.2s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+          はじめる
+        </button>
+
+        {/* スキップ設定 */}
+        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={!skipWelcome}
+            onChange={e => onSkipChange(!e.target.checked)}
+            style={{ width: '12px', height: '12px' }} />
+          <span style={{ fontSize: '11px', color: t.subColor }}>ログイン時にこの画面を表示する</span>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function LoginScreen({ onLogin, theme }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { setTimeout(() => setVisible(true), 50); }, []);
+  const t = theme || THEMES.classic;
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: t.bg,
+      display: 'flex',
+      alignItems: 'flex-start',
+      paddingTop: '30vh',
+      justifyContent: 'center',
+      fontFamily: 'Hiragino Sans, Meiryo, sans-serif',
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.3s ease',
+    }}>
+      <div style={{
+        width: '260px',
+        textAlign: 'center',
+        padding: '0 24px',
+      }}>
+        {/* タイトルボックス */}
+        <div style={{
+          border: `1px solid ${t.dateColor}`,
+          padding: '24px 20px',
+          marginBottom: '28px',
+        }}>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: '300',
+            color: t.dateColor,
+            fontFamily: 'Hiragino Mincho ProN, Georgia, serif',
+            letterSpacing: '.1em',
+            lineHeight: 1.3,
+            marginBottom: '8px',
+          }}>かれんだい</div>
+          <div style={{
+            fontSize: '10px',
+            color: t.dateColor,
+            letterSpacing: '.2em',
+            textTransform: 'uppercase',
+          }}>Calendar Diary</div>
+        </div>
+
+        {/* ログインボタン */}
+        <button onClick={onLogin} style={{
+          width: '100%',
+          padding: '12px',
+          borderRadius: '6px',
+          border: 'none',
+          background: t.pageBg,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          fontSize: '12px',
+          color: t.monthColor,
+          letterSpacing: '.05em',
+          transition: 'opacity 0.2s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+          <svg width="16" height="16" viewBox="0 0 48 48">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
             <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
             <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
@@ -601,73 +748,73 @@ function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, sel
     return () => { cancelled = true; };
   }, [accessToken, mo, dy, yearCount, baseYear, selectedCalendars]);
 
-return (
-  <div style={{ flex: 1, padding: isMobile ? '10px' : '14px 16px', borderRight: isLast ? 'none' : `2px solid ${theme.pageBorder}`, minWidth: 0, background: theme.pageBg }}>
-    <div style={{ paddingBottom: '8px', borderBottom: `1.5px solid ${theme.pageHeaderBorder}` }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: isMobile ? '32px' : '40px' }}>
-          <div style={{ fontSize: `${isMobile ? fs.date * 1.4 : fs.date * 1.6}px`, fontWeight: '300', color: isWe ? theme.weekendColor : theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1 }}>
-            {dy}
+  return (
+    <div style={{ flex: 1, padding: isMobile ? '10px' : '14px 16px', borderRight: isLast ? 'none' : `2px solid ${theme.pageBorder}`, minWidth: 0, background: theme.pageBg }}>
+      <div style={{ paddingBottom: '8px', borderBottom: `1.5px solid ${theme.pageHeaderBorder}` }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: isMobile ? '32px' : '40px' }}>
+            <div style={{ fontSize: `${isMobile ? fs.date * 1.4 : fs.date * 1.6}px`, fontWeight: '300', color: isWe ? theme.weekendColor : theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1 }}>
+              {dy}
+            </div>
+            <div style={{ fontSize: '9px', color: isWe ? theme.weekendColor : theme.subColor, marginTop: '2px', whiteSpace: 'nowrap' }}>
+              {WDS[wd]}曜日
+            </div>
           </div>
-          <div style={{ fontSize: '9px', color: isWe ? theme.weekendColor : theme.subColor, marginTop: '2px', whiteSpace: 'nowrap' }}>
-            {WDS[wd]}曜日
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', minWidth: isMobile ? '44px' : '52px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <span style={{ fontSize: '9px', color: theme.monthColor, letterSpacing: '.05em' }}>{mo + 1}月</span>
+              <span style={{ fontSize: '8px', color: theme.monthColor, letterSpacing: '.1em' }}>{MONTHS_EN[mo].slice(0, 3)}</span>
+            </div>
+            {isToday && (
+              <span style={{ fontSize: '8px', background: theme.pageHeaderBorder, color: theme.pageBg, borderRadius: '3px', padding: '0 4px', lineHeight: 1.8, marginTop: '2px', whiteSpace: 'nowrap' }}>TODAY</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', flex: 1 }}>
+            <div style={{ fontSize: '8px', letterSpacing: '.14em', color: theme.monthColor }}>ANNIVERSARY</div>
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', minWidth: isMobile ? '44px' : '52px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <span style={{ fontSize: '9px', color: theme.monthColor, letterSpacing: '.05em' }}>{mo + 1}月</span>
-            <span style={{ fontSize: '8px', color: theme.monthColor, letterSpacing: '.1em' }}>{MONTHS_EN[mo].slice(0, 3)}</span>
+        {!isMobile && (
+          <div style={{ fontSize: '11px', color: theme.emptyColor, fontStyle: 'italic', minHeight: '10px', borderTop: `0.5px dashed ${theme.rowBorder}`, paddingTop: '3px', marginTop: '4px' }}>
           </div>
-          {isToday && (
-            <span style={{ fontSize: '8px', background: theme.pageHeaderBorder, color: theme.pageBg, borderRadius: '3px', padding: '0 4px', lineHeight: 1.8, marginTop: '2px', whiteSpace: 'nowrap' }}>TODAY</span>
-          )}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', flex: 1 }}>
-          <div style={{ fontSize: '8px', letterSpacing: '.14em', color: theme.monthColor }}>ANNIVERSARY</div>
-        </div>
+        )}
       </div>
-      {!isMobile && (
-        <div style={{ fontSize: '11px', color: theme.emptyColor, fontStyle: 'italic', minHeight: '10px', borderTop: `0.5px dashed ${theme.rowBorder}`, paddingTop: '3px', marginTop: '4px' }}>
-        </div>
-      )}
-    </div>
-    {years.map(y => {
-      const pd = new Date(y, mo, dy);
-      const pwd = WDS[pd.getDay()];
-      const isCur = y === baseYear;
-      const evs = eventsMap[y] || [];
-      return (
-        <div key={y} style={{ display: 'flex', minHeight: `${isMobile ? fs.rowMin * 0.85 : fs.rowMin}px`, borderBottom: `0.5px solid ${theme.rowBorder}`, background: isCur ? theme.currentRowBg : 'transparent', margin: isCur ? '0 -4px' : '0', padding: isCur ? '8px 4px' : '8px 0', borderRadius: isCur ? '4px' : '0' }}>
-          <div style={{ width: isMobile ? '46px' : '64px', flexShrink: 0, paddingRight: '8px', paddingTop: '1px' }}>
-            <span style={{ fontSize: `${isMobile ? fs.yearNum * 0.85 : fs.yearNum}px`, fontWeight: '500', color: isCur ? theme.currentYearColor : theme.pastYearColor, display: 'block', fontFamily: 'monospace' }}>{y}</span>
-            <span style={{ fontSize: '9px', color: theme.subColor, display: 'block', marginTop: '2px' }}>{pwd}</span>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {loadingYears[y]
-              ? <span style={{ fontSize: '11px', color: theme.subColor }}>読込中…</span>
-              : evs.length === 0
-                ? <span style={{ fontSize: `${fs.event}px`, color: theme.emptyColor }}>—</span>
-                : evs.map((ev, i) => (
-                  <div key={i} onClick={() => onEventClick(ev)} style={{ display: 'flex', alignItems: 'flex-start', gap: '5px', padding: '2px 0', cursor: 'pointer' }}>
-                    <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: ev.color || '#3B82F6', marginTop: '4px', flexShrink: 0 }} />
-                    <div style={{ fontSize: `${isMobile ? fs.event * 0.9 : fs.event}px`, color: theme.eventColor, lineHeight: 1.5, overflow: 'hidden', minWidth: 0, flex: 1, textAlign: 'left' }}>
-                      {!isMobile && <span style={{ fontSize: `${fs.evTime}px`, color: theme.subColor, marginRight: '3px' }}>{ev.h}</span>}
-                      {ev.t}
-                      {ev.description && selectedCalendars.find(c => c.id === ev.calendarId)?.showDescription ? (
-                        <div style={{ fontSize: `${fs.evTime}px`, color: theme.subColor, marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isMobile ? '120px' : '200px' }}>
-                          {ev.description.slice(0, 30)}
-                        </div>
-                      ) : null}
+      {years.map(y => {
+        const pd = new Date(y, mo, dy);
+        const pwd = WDS[pd.getDay()];
+        const isCur = y === baseYear;
+        const evs = eventsMap[y] || [];
+        return (
+          <div key={y} style={{ display: 'flex', minHeight: `${isMobile ? fs.rowMin * 0.85 : fs.rowMin}px`, borderBottom: `0.5px solid ${theme.rowBorder}`, background: isCur ? theme.currentRowBg : 'transparent', margin: isCur ? '0 -4px' : '0', padding: isCur ? '8px 4px' : '8px 0', borderRadius: isCur ? '4px' : '0' }}>
+            <div style={{ width: isMobile ? '46px' : '64px', flexShrink: 0, paddingRight: '8px', paddingTop: '1px' }}>
+              <span style={{ fontSize: `${isMobile ? fs.yearNum * 0.85 : fs.yearNum}px`, fontWeight: '500', color: isCur ? theme.currentYearColor : theme.pastYearColor, display: 'block', fontFamily: 'monospace' }}>{y}</span>
+              <span style={{ fontSize: '9px', color: theme.subColor, display: 'block', marginTop: '2px' }}>{pwd}</span>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {loadingYears[y]
+                ? <span style={{ fontSize: '11px', color: theme.subColor }}>読込中…</span>
+                : evs.length === 0
+                  ? <span style={{ fontSize: `${fs.event}px`, color: theme.emptyColor }}>—</span>
+                  : evs.map((ev, i) => (
+                    <div key={i} onClick={() => onEventClick(ev)} style={{ display: 'flex', alignItems: 'flex-start', gap: '5px', padding: '2px 0', cursor: 'pointer' }}>
+                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: ev.color || '#3B82F6', marginTop: '4px', flexShrink: 0 }} />
+                      <div style={{ fontSize: `${isMobile ? fs.event * 0.9 : fs.event}px`, color: theme.eventColor, lineHeight: 1.5, overflow: 'hidden', minWidth: 0, flex: 1, textAlign: 'left' }}>
+                        {!isMobile && <span style={{ fontSize: `${fs.evTime}px`, color: theme.subColor, marginRight: '3px' }}>{ev.h}</span>}
+                        {ev.t}
+                        {ev.description && selectedCalendars.find(c => c.id === ev.calendarId)?.showDescription ? (
+                          <div style={{ fontSize: `${fs.evTime}px`, color: theme.subColor, marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isMobile ? '120px' : '200px' }}>
+                            {ev.description.slice(0, 30)}
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                ))
-            }
+                  ))
+              }
+            </div>
           </div>
-        </div>
-      );
-    })}
-  </div>
-);
+        );
+      })}
+    </div>
+  );
 }
 
 export default function App() {
@@ -728,6 +875,12 @@ export default function App() {
   const [showViewMenu, setShowViewMenu] = useState(false);
   const viewMenuRef = useRef(null);
   const [isPremium, setIsPremium] = useState(() => localStorage.getItem('myd_premium') === 'true');
+  const [isProcessingLogin, setIsProcessingLogin] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeYears, setWelcomeYears] = useState(0);
+  const [welcomeStartYear, setWelcomeStartYear] = useState(null);
+  const [skipWelcome, setSkipWelcome] = useState(() => localStorage.getItem('myd_skip_welcome') === 'true');
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   useEffect(() => {
     const h = (e) => { if (viewMenuRef.current && !viewMenuRef.current.contains(e.target)) setShowViewMenu(false); };
@@ -779,25 +932,40 @@ export default function App() {
     }
   }, [selectedCalendars]);
 
-  const login = useGoogleLogin({
+const login = useGoogleLogin({
     scope: 'https://www.googleapis.com/auth/calendar.readonly profile email',
     onSuccess: async (tokenResponse) => {
+      setIsProcessingLogin(true);
       const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
       });
       const profile = await res.json();
       const userData = { name: profile.name, email: profile.email, picture: profile.picture, accessToken: tokenResponse.access_token, initials: getInitials(profile.name), color: '#3B82F6' };
-      setUser(userData);
-      localStorage.setItem('myd_user', JSON.stringify(userData));
       const cals = await fetchAllCalendars(tokenResponse.access_token);
-      setCalendars(cals);
       const saved = localStorage.getItem('myd_selected_calendars');
+      let newSelectedCals;
       if (saved) {
-        setSelectedCalendars(JSON.parse(saved));
+        newSelectedCals = JSON.parse(saved);
       } else {
         const primary = cals.find(c => c.primary) || cals[0];
-        if (primary) setSelectedCalendars([{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }]);
+        newSelectedCals = primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
       }
+      const isFirst = !localStorage.getItem('myd_welcomed');
+      const shouldShowWelcome = !localStorage.getItem('myd_skip_welcome');
+      let oldestYear = null;
+      if (shouldShowWelcome) {
+        oldestYear = await fetchOldestEventYear(tokenResponse.access_token);
+      }
+      localStorage.setItem('myd_user', JSON.stringify(userData));
+      setUser(userData);
+      setCalendars(cals);
+      setSelectedCalendars(newSelectedCals);
+      setIsFirstLogin(isFirst);
+      if (shouldShowWelcome && oldestYear) {
+        setWelcomeStartYear(oldestYear);
+        setWelcomeYears(today.getFullYear() - oldestYear + 1);
+      }
+      setShowWelcome(shouldShowWelcome);
     },
     onError: (err) => console.error('ログイン失敗:', err),
   });
@@ -897,7 +1065,25 @@ export default function App() {
 
   const calName = (ev) => { const cal = selectedCalendars.find(c => c.id === ev.calendarId); return cal ? cal.name : ''; };
 
-  if (!user) return <LoginScreen onLogin={login} />;
+  if (!user) return isProcessingLogin
+  ? <div style={{ minHeight: '100vh', background: theme.bg }} />
+  : <LoginScreen onLogin={login} theme={theme} />;
+  if (showWelcome) return <WelcomeScreen
+    years={welcomeYears}
+    startYear={welcomeStartYear}
+    isFirst={isFirstLogin}
+    skipWelcome={skipWelcome}
+    onSkipChange={(val) => {
+      setSkipWelcome(val);
+      localStorage.setItem('myd_skip_welcome', val ? 'true' : 'false');
+    }}
+    onStart={() => {
+      localStorage.setItem('myd_welcomed', 'true');
+      setShowWelcome(false);
+    }}
+    theme={theme}
+  />;
+
   if (isLocked) return <LockScreen onUnlock={() => setIsLocked(false)} theme={theme} />;
 
   const jumpRow = (
@@ -1060,6 +1246,15 @@ export default function App() {
       {selectedEvent && (
         <EventModal event={selectedEvent} calendarName={calName(selectedEvent)} onClose={() => setSelectedEvent(null)} />
       )}
+      <div style={{
+        textAlign: 'center',
+        padding: '12px',
+        fontSize: '10px',
+        color: theme.subColor,
+        letterSpacing: '.1em',
+      }}>
+        CalenDai v0.1.0
+      </div>
     </div>
   );
 }
