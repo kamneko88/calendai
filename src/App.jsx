@@ -11,6 +11,7 @@ import UserMenu from "./components/UserMenu";
 import EventModal from "./components/EventModal";
 import SettingsPanel from "./components/SettingsPanel";
 import DayPage from "./components/DayPage";
+import AnniversaryTab from "./components/AnniversaryTab";
 
 export default function App() {
   const today = new Date();
@@ -50,12 +51,16 @@ export default function App() {
   const [isLocked, setIsLocked] = useState(false);
   const [showViewMenu, setShowViewMenu] = useState(false);
   const [isPremium, setIsPremium] = useState(() => localStorage.getItem('myd_premium') === 'true');
+  const [showAnniversary, setShowAnniversary] = useState(false);
   const [isProcessingLogin, setIsProcessingLogin] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeYears, setWelcomeYears] = useState(0);
   const [welcomeStartYear, setWelcomeStartYear] = useState(null);
   const [skipWelcome, setSkipWelcome] = useState(() => localStorage.getItem('myd_skip_welcome') === 'true');
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [anniversaryCalendarId, setAnniversaryCalendarId] = useState(
+    () => localStorage.getItem('myd_anniversary_cal') || null
+  );
 
   const theme = THEMES[settings.theme] || THEMES.classic;
   const viewMenuRef = useRef(null);
@@ -131,6 +136,16 @@ export default function App() {
         setWelcomeStartYear(oldestYear);
         setWelcomeYears(today.getFullYear() - oldestYear + 1);
       }
+
+      // 記念日カレンダーを自動検出（未設定の場合のみ）
+      if (!localStorage.getItem('myd_anniversary_cal')) {
+        const autoAnniv = cals.find(c => /anniversary|記念日/i.test(c.summary));
+        if (autoAnniv) {
+          localStorage.setItem('myd_anniversary_cal', autoAnniv.id);
+          setAnniversaryCalendarId(autoAnniv.id);
+        }
+      }
+
       setShowWelcome(shouldShowWelcome);
       setIsProcessingLogin(false);
     },
@@ -140,6 +155,14 @@ export default function App() {
   const handleLogout = () => {
     setUser(null); setCalendars([]); setSelectedCalendars([]); setTokenExpired(false);
     localStorage.removeItem('myd_user');
+  };
+
+  const handleJumpToDate = (month, day) => {
+    const target = new Date(today.getFullYear(), month - 1, day);
+    setBaseYear(today.getFullYear());
+    const newBase = new Date(target);
+    newBase.setDate(target.getDate() - (dayCount - 1));
+    setBase(newBase);
   };
 
   const handleCalendarToggle = (cal) => {
@@ -283,62 +306,78 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: 'Hiragino Sans, Meiryo, sans-serif', padding: isMobile ? '8px' : '14px' }}>
 
       {/* ヘッダー */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', padding: isMobile ? '8px 10px' : '10px 14px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}`, gap: '8px', flexWrap: 'wrap' }}>
-        <div ref={viewMenuRef} style={{ flexShrink: 0, marginRight: '8px', position: 'relative' }}>
-          <div onClick={() => setShowViewMenu(o => !o)} style={{ cursor: 'pointer', userSelect: 'none' }}>
-            {!isMobile && <div style={{ fontSize: '9px', letterSpacing: '.15em', color: theme.monthColor, lineHeight: 1 }}>CalenDai</div>}
-            <div style={{ fontSize: isMobile ? '13px' : '16px', fontWeight: '600', color: theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2 }}>{yearCount}年日記 ▾</div>
-          </div>
-          {showViewMenu && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#fff', border: '0.5px solid #ddd', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 1000, padding: '12px 16px', minWidth: '160px' }}>
-              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '8px', letterSpacing: '.1em' }}>表示設定</div>
-              <div style={{ marginBottom: '10px' }}>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>年数</div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {(isPremium ? [3, 5] : [3]).map(n => (
-                    <button key={n} onClick={() => {
-                      setYearCount(n);
-                      const newSettings = { ...settings, defaultYearCount: n };
-                      setSettings(newSettings);
-                      if (n === 5 && dayCount > 2) handleDayCountChange(2);
-                    }}
-                      style={{ padding: '4px 12px', border: `0.5px solid ${yearCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: yearCount === n ? theme.btnActiveBg : '#fff', color: yearCount === n ? theme.btnActiveColor : theme.btnColor }}>
-                      {n}年
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>日数</div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {[1, 2].map(n => (
-                    <button key={n} onClick={() => {
-                      handleDayCountChange(n);
-                      const newSettings = { ...settings, defaultDayCount: n };
-                      setSettings(newSettings);
-                    }}
-                      style={{ padding: '4px 12px', border: `0.5px solid ${dayCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: dayCount === n ? theme.btnActiveBg : '#fff', color: dayCount === n ? theme.btnActiveColor : theme.btnColor }}>
-                      {n}日
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', padding: isMobile ? '8px 10px' : '10px 14px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}`, gap: '8px' }}>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <button onClick={() => navigate(-1)} style={btnStyle(false)}>◀</button>
-            <span style={{ fontSize: '12px', color: '#888', minWidth: isMobile ? '70px' : '96px', textAlign: 'center' }}>{formatRange()}</span>
-            <button onClick={goToday} style={btnStyle(false)}>今日</button>
-            <button onClick={() => navigate(1)} style={btnStyle(false)}>▶</button>
-          </div>
-          {!isMobile && jumpRow}
-        </div>
+  {/* 左：タイトル＋バッジ＋ナビ */}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
 
-        <UserMenu user={user} onSettingsOpen={() => setShowSettings(true)} onLogout={handleLogout} />
+    {/* タイトル */}
+    <div ref={viewMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+      <div onClick={() => setShowViewMenu(o => !o)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+        {!isMobile && <div style={{ fontSize: '9px', letterSpacing: '.15em', color: theme.monthColor, lineHeight: 1 }}>CalenDai</div>}
+        <div style={{ fontSize: isMobile ? '13px' : '16px', fontWeight: '600', color: theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{yearCount}年日記 ▾</div>
       </div>
+      {showViewMenu && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#fff', border: '0.5px solid #ddd', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 1000, padding: '12px 16px', minWidth: '160px' }}>
+          <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '8px', letterSpacing: '.1em' }}>表示設定</div>
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>年数</div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {(isPremium ? [3, 5] : [3]).map(n => (
+                <button key={n} onClick={() => {
+                  setYearCount(n);
+                  const newSettings = { ...settings, defaultYearCount: n };
+                  setSettings(newSettings);
+                  if (n === 5 && dayCount > 2) handleDayCountChange(2);
+                }}
+                  style={{ padding: '4px 12px', border: `0.5px solid ${yearCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: yearCount === n ? theme.btnActiveBg : '#fff', color: yearCount === n ? theme.btnActiveColor : theme.btnColor }}>
+                  {n}年
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>日数</div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {[1, 2].map(n => (
+                <button key={n} onClick={() => {
+                  handleDayCountChange(n);
+                  const newSettings = { ...settings, defaultDayCount: n };
+                  setSettings(newSettings);
+                }}
+                  style={{ padding: '4px 12px', border: `0.5px solid ${dayCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: dayCount === n ? theme.btnActiveBg : '#fff', color: dayCount === n ? theme.btnActiveColor : theme.btnColor }}>
+                  {n}日
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* FREE/PROバッジ */}
+    <div style={{ fontSize: '8px', fontWeight: '700', letterSpacing: '.05em', padding: '1px 5px', borderRadius: '3px', flexShrink: 0, background: isPremium ? theme.currentYearColor : theme.subColor, color: theme.pageBg, opacity: 0.85, fontFamily: 'monospace' }}>
+      {isPremium ? 'PRO' : 'FREE'}
+    </div>
+
+    {/* ナビゲーション */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+      <button onClick={() => navigate(-1)} style={btnStyle(false)}>◀</button>
+      <button onClick={goToday} style={btnStyle(false)}>今日</button>
+      <button onClick={() => navigate(1)} style={btnStyle(false)}>▶</button>
+    </div>
+
+    {/* PC用ジャンプ行 */}
+    {!isMobile && jumpRow}
+  </div>
+
+  {/* 右：記念日＋アカウント */}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+    <button onClick={() => setShowAnniversary(true)} style={btnStyle(false)}>🎖{!isMobile && ' 記念日'}</button>
+    <UserMenu user={user} onSettingsOpen={() => setShowSettings(true)} onLogout={handleLogout} />
+  </div>
+
+</div>
 
       {/* スマホ用ジャンプ行 */}
       {isMobile && (
@@ -353,6 +392,7 @@ export default function App() {
           <DayPage key={i} date={d} yearCount={yearCount} baseYear={baseYear}
             fontSize={settings.fontSize} isLast={i === days.length - 1}
             accessToken={user.accessToken} selectedCalendars={selectedCalendars}
+            anniversaryCalendarId={anniversaryCalendarId}
             isMobile={isMobile} onEventClick={setSelectedEvent}
             onTokenExpired={() => setTokenExpired(true)}
             theme={theme} />
@@ -365,13 +405,30 @@ export default function App() {
       </div>
 
       {/* モーダル類 */}
+      {showAnniversary && (
+        <AnniversaryTab
+          accessToken={user.accessToken}
+          anniversaryCalendarId={anniversaryCalendarId}
+          calendars={calendars}
+          currentYear={today.getFullYear()}
+          onJump={handleJumpToDate}
+          onClose={() => setShowAnniversary(false)}
+          theme={theme}
+        />
+      )}
       {showSettings && (
         <SettingsPanel settings={settings} onChange={setSettings} onClose={() => setShowSettings(false)}
           calendars={calendars} selectedCalendars={selectedCalendars} onCalendarToggle={handleCalendarToggle}
           onYearCountChange={setYearCount} onDayCountChange={handleDayCountChange}
           onDescriptionToggle={(calId) => setSelectedCalendars(prev => prev.map(c => c.id === calId ? { ...c, showDescription: !c.showDescription } : c))}
           onPinSetup={() => { setShowSettings(false); setShowPinSetup(true); }}
-          isPremium={isPremium} />
+          isPremium={isPremium}
+          anniversaryCalendarId={anniversaryCalendarId}
+          onAnniversaryCalendarChange={(id) => {
+            setAnniversaryCalendarId(id);
+            if (id) localStorage.setItem('myd_anniversary_cal', id);
+            else localStorage.removeItem('myd_anniversary_cal');
+          }} />
       )}
       {showPinSetup && (
         <PinSetupScreen onComplete={() => { setShowPinSetup(false); setIsLocked(true); }} onCancel={() => setShowPinSetup(false)} />

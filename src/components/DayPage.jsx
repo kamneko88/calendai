@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { WDS, FS } from "../constants";
 import { fetchCalendarEvents } from "../api";
 
-export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, isMobile, onEventClick, onTokenExpired, theme }) {
+export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isMobile, onEventClick, onTokenExpired, theme }) {
   const mo = date.getMonth();
   const dy = date.getDate();
   const wd = date.getDay();
@@ -13,9 +13,11 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
   const years = Array.from({ length: yearCount }, (_, i) => baseYear - i);
   const [eventsMap, setEventsMap] = useState({});
   const [loadingYears, setLoadingYears] = useState({});
+  const [anniversaryEvents, setAnniversaryEvents] = useState([]);
 
   const MONTHS_EN = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 
+  // 通常カレンダーイベント取得
   useEffect(() => {
     if (!accessToken || selectedCalendars.length === 0) return;
     let cancelled = false;
@@ -40,10 +42,24 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
     return () => { cancelled = true; };
   }, [accessToken, mo, dy, yearCount, baseYear, selectedCalendars]);
 
+  // 記念日カレンダーイベント取得（今年の同月同日）
+  useEffect(() => {
+    if (!accessToken || !anniversaryCalendarId) { setAnniversaryEvents([]); return; }
+    let cancelled = false;
+
+    fetchCalendarEvents(accessToken, anniversaryCalendarId, today.getFullYear(), mo + 1, dy, onTokenExpired)
+      .then(evs => {
+        if (!cancelled) setAnniversaryEvents(evs.filter(ev => ev.isAllDay));
+      });
+
+    return () => { cancelled = true; };
+  }, [accessToken, anniversaryCalendarId, mo, dy]);
+
   return (
     <div style={{ flex: 1, padding: isMobile ? '10px' : '14px 16px', borderRight: isLast ? 'none' : `2px solid ${theme.pageBorder}`, minWidth: 0, background: theme.pageBg }}>
       <div style={{ paddingBottom: '8px', borderBottom: `1.5px solid ${theme.pageHeaderBorder}` }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          {/* 左：日付・曜日 */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: isMobile ? '32px' : '40px' }}>
             <div style={{ fontSize: `${isMobile ? fs.date * 1.4 : fs.date * 1.6}px`, fontWeight: '300', color: isWe ? theme.weekendColor : theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1 }}>
               {dy}
@@ -52,6 +68,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
               {WDS[wd]}曜日
             </div>
           </div>
+          {/* 中：月名・TODAY */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', minWidth: isMobile ? '44px' : '52px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
               <span style={{ fontSize: '9px', color: theme.monthColor, letterSpacing: '.05em' }}>{mo + 1}月</span>
@@ -61,8 +78,21 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
               <span style={{ fontSize: '8px', background: theme.pageHeaderBorder, color: theme.pageBg, borderRadius: '3px', padding: '0 4px', lineHeight: 1.8, marginTop: '2px', whiteSpace: 'nowrap' }}>TODAY</span>
             )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', flex: 1 }}>
-            <div style={{ fontSize: '8px', letterSpacing: '.14em', color: theme.monthColor }}>ANNIVERSARY</div>
+          {/* 右：ANNIVERSARY */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '8px', letterSpacing: '.14em', color: theme.monthColor, marginBottom: '3px' }}>ANNIVERSARY</div>
+            {anniversaryEvents.length > 0 ? (
+              anniversaryEvents.map((ev, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0 }}>
+                  <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#c0607a', flexShrink: 0 }} />
+                  <div style={{ fontSize: '10px', color: theme.eventColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {ev.t}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ fontSize: '9px', color: theme.emptyColor }}>—</div>
+            )}
           </div>
         </div>
         {!isMobile && (

@@ -45,3 +45,20 @@ export async function fetchOldestEventYear(accessToken) {
   } catch { }
   return null;
 }
+
+export async function fetchYearEvents(accessToken, calendarId, year, onTokenExpired) {
+  const timeMin = new Date(year, 0, 1).toISOString();
+  const timeMax = new Date(year, 11, 31, 23, 59, 59).toISOString();
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime&maxResults=250`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (res.status === 401) { onTokenExpired && onTokenExpired(); return []; }
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.items || [])
+    .filter(ev => ev.start.date) // 終日イベントのみ
+    .map(ev => ({
+      t: ev.summary || '（タイトルなし）',
+      date: ev.start.date, // "2026-05-15" 形式
+      calendarId,
+    }));
+}

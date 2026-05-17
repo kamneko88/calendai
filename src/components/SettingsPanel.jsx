@@ -1,6 +1,11 @@
-import { THEMES, CAL_COLORS } from "../constants";
+import { CAL_COLORS, THEMES } from "../constants";
 
-export default function SettingsPanel({ settings, onChange, onClose, calendars, selectedCalendars, onCalendarToggle, onYearCountChange, onDayCountChange, onDescriptionToggle, onPinSetup, isPremium }) {
+export default function SettingsPanel({
+  settings, onChange, onClose,
+  calendars, selectedCalendars, onCalendarToggle, onDescriptionToggle,
+  onYearCountChange, onDayCountChange, onPinSetup, isPremium,
+  anniversaryCalendarId, onAnniversaryCalendarChange,
+}) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -72,9 +77,9 @@ export default function SettingsPanel({ settings, onChange, onClose, calendars, 
             </div>
           </div>
 
-          {/* カレンダー選択 */}
+          {/* 表示カレンダー */}
           {calendars.length > 0 && (
-            <div>
+            <div style={{ marginBottom: '22px' }}>
               <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '4px', textTransform: 'uppercase' }}>表示カレンダー（最大3つ）</div>
               <div style={{ fontSize: '11px', color: '#bbb', marginBottom: '10px' }}>チェックしたカレンダーのデータを表示します</div>
               {calendars.map((cal, i) => {
@@ -101,6 +106,45 @@ export default function SettingsPanel({ settings, onChange, onClose, calendars, 
               })}
             </div>
           )}
+
+          {/* 記念日カレンダー */}
+          {calendars.length > 0 && (
+            <div>
+              <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '4px', textTransform: 'uppercase' }}>記念日カレンダー</div>
+              <div style={{ fontSize: '11px', color: '#bbb', marginBottom: '10px' }}>「記念日一覧」に表示するカレンダーを1つ選択します</div>
+              {/* 未設定 */}
+              <div style={{ padding: '8px 0', borderBottom: '0.5px solid #f0f0f0' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <input type="radio" name="anniversaryCal" checked={!anniversaryCalendarId}
+                    onChange={() => onAnniversaryCalendarChange(null)}
+                    style={{ width: '15px', height: '15px', flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: '#aaa' }}>未設定</span>
+                </label>
+              </div>
+              {calendars.map((cal, i) => {
+                const isAnniv = /anniversary|記念日/i.test(cal.summary);
+                return (
+                  <div key={cal.id} style={{ padding: '8px 0', borderBottom: '0.5px solid #f0f0f0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                      <input type="radio" name="anniversaryCal" checked={anniversaryCalendarId === cal.id}
+                        onChange={() => onAnniversaryCalendarChange(cal.id)}
+                        style={{ width: '15px', height: '15px', flexShrink: 0 }} />
+                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
+                      <span style={{ fontSize: '13px', color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{cal.summary}</span>
+                      {isAnniv && <span style={{ fontSize: '10px', color: '#fff', background: '#c0607a', borderRadius: '3px', padding: '1px 5px', flexShrink: 0 }}>推奨</span>}
+                    </label>
+                  </div>
+                );
+              })}
+              {/* 将来実装：新規カレンダー作成ボタン（プレースホルダー） */}
+              <div style={{ padding: '10px 0' }}>
+                <button disabled style={{ fontSize: '12px', color: '#ccc', background: 'none', border: '0.5px dashed #ddd', borderRadius: '6px', padding: '6px 12px', cursor: 'not-allowed' }}>
+                  ＋ 新しく記念日カレンダーを作成（近日実装）
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
         <div style={{ padding: '10px 18px 14px', textAlign: 'right' }}>
           <button onClick={onClose} style={{ padding: '7px 22px', background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>閉じる</button>
