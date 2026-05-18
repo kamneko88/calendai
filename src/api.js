@@ -63,3 +63,25 @@ export async function fetchYearEvents(accessToken, calendarId, year, onTokenExpi
       calendarId,
     }));
 }
+
+export async function createCalendarEvent(accessToken, calendarId, date, title, description) {
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const endDate = new Date(date);
+  endDate.setDate(endDate.getDate() + 1);
+  const endStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        summary: title,
+        description: description || '',
+        start: { date: dateStr },
+        end: { date: endStr },
+      }),
+    }
+  );
+  if (!res.ok) throw new Error('イベントの作成に失敗しました');
+  return await res.json();
+}

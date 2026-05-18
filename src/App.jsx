@@ -110,7 +110,7 @@ export default function App() {
   }, [selectedCalendars]);
 
   const login = useGoogleLogin({
-    scope: 'https://www.googleapis.com/auth/calendar.readonly profile email',
+    scope: 'https://www.googleapis.com/auth/calendar profile email',
     onSuccess: async (tokenResponse) => {
       setIsProcessingLogin(true);
       const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -455,6 +455,7 @@ export default function App() {
             fontSize={settings.fontSize} isLast={i === days.length - 1}
             accessToken={user.accessToken} selectedCalendars={selectedCalendars}
             anniversaryCalendarId={anniversaryCalendarId}
+            isPremium={isPremium}
             isMobile={isMobile} onEventClick={setSelectedEvent}
             onTokenExpired={() => setTokenExpired(true)}
             theme={theme} />
