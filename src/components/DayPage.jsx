@@ -14,6 +14,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
   const [eventsMap, setEventsMap] = useState({});
   const [loadingYears, setLoadingYears] = useState({});
   const [anniversaryEvents, setAnniversaryEvents] = useState([]);
+  const [expandedAnniv, setExpandedAnniv] = useState(null);
 
   const MONTHS_EN = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 
@@ -83,11 +84,22 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
             <div style={{ fontSize: '8px', letterSpacing: '.14em', color: theme.monthColor, marginBottom: '3px' }}>ANNIVERSARY</div>
             {anniversaryEvents.length > 0 ? (
               anniversaryEvents.map((ev, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0 }}>
-                  <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#c0607a', flexShrink: 0 }} />
-                  <div style={{ fontSize: '10px', color: theme.eventColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {ev.t}
+                <div key={i} style={{ minWidth: 0, width: '100%' }}>
+                  <div onClick={() => ev.description && setExpandedAnniv(expandedAnniv === i ? null : i)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, cursor: ev.description ? 'pointer' : 'default' }}>
+                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#c0607a', flexShrink: 0 }} />
+                    <div style={{ fontSize: '10px', color: theme.eventColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {ev.t}
+                    </div>
+                    {ev.description && (
+                      <span style={{ fontSize: '8px', color: theme.subColor, flexShrink: 0 }}>{expandedAnniv === i ? '▲' : '▼'}</span>
+                    )}
                   </div>
+                  {expandedAnniv === i && ev.description && (
+                    <div style={{ fontSize: '10px', color: theme.subColor, lineHeight: 1.6, whiteSpace: 'pre-wrap', marginTop: '3px', paddingLeft: '8px', borderLeft: '2px solid #c0607a' }}>
+                      {ev.description}
+                    </div>
+                  )}
                 </div>
               ))
             ) : (

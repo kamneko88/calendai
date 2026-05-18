@@ -58,7 +58,8 @@ export async function fetchYearEvents(accessToken, calendarId, year, onTokenExpi
     .filter(ev => ev.start.date) // 終日イベントのみ
     .map(ev => ({
       t: ev.summary || '（タイトルなし）',
-      date: ev.start.date, // "2026-05-15" 形式
+      date: ev.start.date,
+      description: ev.description || '',
       calendarId,
     }));
 }

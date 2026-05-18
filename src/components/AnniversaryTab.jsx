@@ -7,31 +7,25 @@ const MONTHS_JA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月
 export default function AnniversaryTab({ accessToken, calendars, anniversaryCalendarId, currentYear, onJump, onClose, theme }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedKey, setExpandedKey] = useState(null);
 
-  // 選択中の記念日カレンダー情報
   const annivCal = calendars?.find(c => c.id === anniversaryCalendarId) || null;
 
   useEffect(() => {
     if (!accessToken || !anniversaryCalendarId) { setLoading(false); return; }
     let cancelled = false;
-
     const load = async () => {
       setLoading(true);
       const evs = await fetchYearEvents(accessToken, anniversaryCalendarId, currentYear);
       if (cancelled) return;
-      const colored = evs.map(ev => ({
-        ...ev,
-        color: annivCal?.backgroundColor || '#c0607a',
-      }));
+      const colored = evs.map(ev => ({ ...ev, color: annivCal?.backgroundColor || '#c0607a' }));
       setEvents(colored.sort((a, b) => a.date.localeCompare(b.date)));
       setLoading(false);
     };
-
     load();
     return () => { cancelled = true; };
   }, [accessToken, anniversaryCalendarId, currentYear]);
 
-  // 月ごとにグループ化
   const grouped = {};
   events.forEach(ev => {
     const month = parseInt(ev.date.slice(5, 7)) - 1;
@@ -80,27 +74,44 @@ export default function AnniversaryTab({ accessToken, calendars, anniversaryCale
                   {MONTHS_JA[parseInt(monthIdx)]}
                 </div>
                 {evs.map((ev, i) => {
+                  const key = `${monthIdx}-${i}`;
+                  const isExpanded = expandedKey === key;
                   const d = new Date(ev.date + 'T00:00:00');
                   const day = d.getDate();
                   const wd = WDS[d.getDay()];
                   const isWe = d.getDay() === 0 || d.getDay() === 6;
                   return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 18px', borderBottom: `0.5px solid ${theme.rowBorder}` }}>
-                      <div style={{ width: '40px', flexShrink: 0, textAlign: 'center' }}>
-                        <div style={{ fontSize: '20px', fontWeight: '300', color: isWe ? theme.weekendColor : theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1 }}>{day}</div>
-                        <div style={{ fontSize: '9px', color: isWe ? theme.weekendColor : theme.subColor }}>{wd}</div>
+                    <div key={i} style={{ borderBottom: `0.5px solid ${theme.rowBorder}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 18px' }}>
+                        {/* 日付 */}
+                        <div style={{ width: '40px', flexShrink: 0, textAlign: 'center' }}>
+                          <div style={{ fontSize: '20px', fontWeight: '300', color: isWe ? theme.weekendColor : theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1 }}>{day}</div>
+                          <div style={{ fontSize: '9px', color: isWe ? theme.weekendColor : theme.subColor }}>{wd}</div>
+                        </div>
+                        {/* タイトル（タップで説明欄展開） */}
+                        <div onClick={() => ev.description && setExpandedKey(isExpanded ? null : key)}
+                          style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px', cursor: ev.description ? 'pointer' : 'default' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ev.color, flexShrink: 0 }} />
+                          <div style={{ fontSize: '13px', color: theme.eventColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{ev.t}</div>
+                          {ev.description && (
+                            <span style={{ fontSize: '10px', color: theme.subColor, flexShrink: 0 }}>{isExpanded ? '▲' : '▼'}</span>
+                          )}
+                        </div>
+                        {/* ジャンプボタン */}
+                        <button
+                          onClick={() => { onJump(d.getMonth() + 1, day); onClose(); }}
+                          style={{ flexShrink: 0, padding: '4px 10px', fontSize: '11px', border: `0.5px solid ${theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', background: theme.headerBg, color: theme.btnColor, whiteSpace: 'nowrap' }}
+                          onMouseEnter={e => e.currentTarget.style.background = theme.currentRowBg}
+                          onMouseLeave={e => e.currentTarget.style.background = theme.headerBg}>
+                          この日へ
+                        </button>
                       </div>
-                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ev.color, flexShrink: 0 }} />
-                        <div style={{ fontSize: '13px', color: theme.eventColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.t}</div>
-                      </div>
-                      <button
-                        onClick={() => { onJump(d.getMonth() + 1, day); onClose(); }}
-                        style={{ flexShrink: 0, padding: '4px 10px', fontSize: '11px', border: `0.5px solid ${theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', background: theme.headerBg, color: theme.btnColor, whiteSpace: 'nowrap' }}
-                        onMouseEnter={e => e.currentTarget.style.background = theme.currentRowBg}
-                        onMouseLeave={e => e.currentTarget.style.background = theme.headerBg}>
-                        この日へ
-                      </button>
+                      {/* 説明欄（展開時） */}
+                      {isExpanded && ev.description && (
+                        <div style={{ margin: '0 18px 10px', padding: '10px 12px', background: theme.currentRowBg, borderRadius: '6px', fontSize: '12px', color: theme.eventColor, lineHeight: 1.7, whiteSpace: 'pre-wrap', borderLeft: `3px solid ${ev.color}` }}>
+                          {ev.description}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
