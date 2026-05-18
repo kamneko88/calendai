@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
-import { THEMES, CAL_COLORS } from "./constants";
+import { THEMES, CAL_COLORS, FONTS } from "./constants";
 import { fetchAllCalendars, fetchOldestEventYear } from "./api";
 import { getInitials, useWindowWidth, useSwipe } from "./hooks";
 import LockScreen from "./components/LockScreen";
@@ -23,17 +23,17 @@ export default function App() {
       const saved = localStorage.getItem('myd_settings');
       if (saved) return JSON.parse(saved);
     } catch { }
-    return { stepNav: false, fontSize: 'small', defaultYearCount: 3, defaultDayCount: 2, theme: 'classic' };
+    return { stepNav: false, fontSize: 'small', defaultYearCount: 3, defaultDayCount: 2, theme: 'classic', fontFamily: 'gothic' };
   };
 
   const [user, setUser] = useState(null);
   const [settings, setSettings] = useState(loadSettings);
   const [dayCount, setDayCount] = useState(() => Math.min(loadSettings().defaultDayCount || 2, 2));
   const [yearCount, setYearCount] = useState(() => {
-  const saved = loadSettings().defaultYearCount || 3;
-  const premium = localStorage.getItem('myd_premium') === 'true';
-  return premium ? saved : Math.min(saved, 3);
-});
+    const saved = loadSettings().defaultYearCount || 3;
+    const premium = localStorage.getItem('myd_premium') === 'true';
+    return premium ? saved : Math.min(saved, 3);
+  });
   const [base, setBase] = useState(() => {
     const dc = loadSettings().defaultDayCount || 2;
     const d = new Date(today);
@@ -307,7 +307,7 @@ export default function App() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: 'Hiragino Sans, Meiryo, sans-serif', padding: isMobile ? '8px' : '14px' }}>
+    <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: FONTS[settings.fontFamily || 'gothic']?.family || FONTS.gothic.family, padding: isMobile ? '8px' : '14px' }}>
 
       {/* ヘッダー */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', padding: isMobile ? '8px 10px' : '10px 14px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}`, gap: '8px' }}>
@@ -389,6 +389,28 @@ export default function App() {
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     🚪 ログアウト
                   </button>
+
+                  {/* DEV: FREE/PRO切り替え（リリース前に削除） */}
+                  <div style={{ borderTop: '0.5px solid #eee', margin: '6px 0' }} />
+                  <button onClick={() => {
+                    const next = !isPremium;
+                    setIsPremium(next);
+                    if (next) {
+                      localStorage.setItem('myd_premium', 'true');
+                    } else {
+                      localStorage.removeItem('myd_premium');
+                      if (yearCount > 3) {
+                        setYearCount(3);
+                        setSettings(s => ({ ...s, defaultYearCount: 3 }));
+                      }
+                    }
+                    setShowViewMenu(false);
+                  }}
+                    style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    🛠 DEV: {isPremium ? 'PRO → FREEに切替' : 'FREE → PROに切替'}
+                  </button>
                 </div>
               </div>
             )}
@@ -418,11 +440,13 @@ export default function App() {
       </div>
 
       {/* スマホ用ジャンプ行 */}
-      {isMobile && (
-        <div style={{ marginBottom: '8px', padding: '8px 10px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}` }}>
-          {jumpRow}
-        </div>
-      )}
+      {
+        isMobile && (
+          <div style={{ marginBottom: '8px', padding: '8px 10px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}` }}>
+            {jumpRow}
+          </div>
+        )
+      }
 
       {/* メインコンテンツ */}
       <div {...(isMobile ? swipeHandlers : {})} style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', transform: animating ? `translateX(${slideDir > 0 ? '-30px' : '30px'})` : 'translateX(0)', opacity: animating ? 0 : 1, transition: 'transform 0.15s ease, opacity 0.15s ease' }}>
@@ -443,50 +467,60 @@ export default function App() {
       </div>
 
       {/* モーダル類 */}
-      {showAnniversary && (
-        <AnniversaryTab
-          accessToken={user.accessToken}
-          anniversaryCalendarId={anniversaryCalendarId}
-          calendars={calendars}
-          currentYear={today.getFullYear()}
-          onJump={handleJumpToDate}
-          onClose={() => setShowAnniversary(false)}
-          theme={theme}
-        />
-      )}
-      {showSettings && (
-        <SettingsPanel settings={settings} onChange={setSettings} onClose={() => setShowSettings(false)}
-          calendars={calendars} selectedCalendars={selectedCalendars} onCalendarToggle={handleCalendarToggle}
-          onYearCountChange={setYearCount} onDayCountChange={handleDayCountChange}
-          onDescriptionToggle={(calId) => setSelectedCalendars(prev => prev.map(c => c.id === calId ? { ...c, showDescription: !c.showDescription } : c))}
-          onPinSetup={() => { setShowSettings(false); setShowPinSetup(true); }}
-          isPremium={isPremium}
-          anniversaryCalendarId={anniversaryCalendarId}
-          onAnniversaryCalendarChange={(id) => {
-            setAnniversaryCalendarId(id);
-            if (id) localStorage.setItem('myd_anniversary_cal', id);
-            else localStorage.removeItem('myd_anniversary_cal');
-          }} />
-      )}
-      {showPinSetup && (
-        <PinSetupScreen onComplete={() => { setShowPinSetup(false); setIsLocked(true); }} onCancel={() => setShowPinSetup(false)} />
-      )}
-      {selectedEvent && (
-        <EventModal event={selectedEvent} calendarName={calName(selectedEvent)} onClose={() => setSelectedEvent(null)} />
-      )}
-      {tokenExpired && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#fff', borderRadius: '12px', padding: '28px 24px', width: '100%', maxWidth: '320px', textAlign: 'center', border: '0.5px solid #ddd' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏰</div>
-            <div style={{ fontSize: '15px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>セッションが切れました</div>
-            <div style={{ fontSize: '12px', color: '#888', marginBottom: '20px' }}>再度ログインしてください</div>
-            <button onClick={handleLogout}
-              style={{ width: '100%', padding: '10px', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
-              ログイン画面へ
-            </button>
+      {
+        showAnniversary && (
+          <AnniversaryTab
+            accessToken={user.accessToken}
+            anniversaryCalendarId={anniversaryCalendarId}
+            calendars={calendars}
+            currentYear={today.getFullYear()}
+            onJump={handleJumpToDate}
+            onClose={() => setShowAnniversary(false)}
+            theme={theme}
+          />
+        )
+      }
+      {
+        showSettings && (
+          <SettingsPanel settings={settings} onChange={setSettings} onClose={() => setShowSettings(false)}
+            calendars={calendars} selectedCalendars={selectedCalendars} onCalendarToggle={handleCalendarToggle}
+            onYearCountChange={setYearCount} onDayCountChange={handleDayCountChange}
+            onDescriptionToggle={(calId) => setSelectedCalendars(prev => prev.map(c => c.id === calId ? { ...c, showDescription: !c.showDescription } : c))}
+            onPinSetup={() => { setShowSettings(false); setShowPinSetup(true); }}
+            isPremium={isPremium}
+            anniversaryCalendarId={anniversaryCalendarId}
+            onAnniversaryCalendarChange={(id) => {
+              setAnniversaryCalendarId(id);
+              if (id) localStorage.setItem('myd_anniversary_cal', id);
+              else localStorage.removeItem('myd_anniversary_cal');
+            }} />
+        )
+      }
+      {
+        showPinSetup && (
+          <PinSetupScreen onComplete={() => { setShowPinSetup(false); setIsLocked(true); }} onCancel={() => setShowPinSetup(false)} />
+        )
+      }
+      {
+        selectedEvent && (
+          <EventModal event={selectedEvent} calendarName={calName(selectedEvent)} onClose={() => setSelectedEvent(null)} />
+        )
+      }
+      {
+        tokenExpired && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: '#fff', borderRadius: '12px', padding: '28px 24px', width: '100%', maxWidth: '320px', textAlign: 'center', border: '0.5px solid #ddd' }}>
+              <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏰</div>
+              <div style={{ fontSize: '15px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>セッションが切れました</div>
+              <div style={{ fontSize: '12px', color: '#888', marginBottom: '20px' }}>再度ログインしてください</div>
+              <button onClick={handleLogout}
+                style={{ width: '100%', padding: '10px', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                ログイン画面へ
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }

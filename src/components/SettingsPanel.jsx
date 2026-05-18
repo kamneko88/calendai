@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CAL_COLORS, THEMES } from "../constants";
+import { CAL_COLORS, THEMES, FONTS } from "../constants";
 
 export default function SettingsPanel({
   settings, onChange, onClose,
@@ -67,6 +67,22 @@ export default function SettingsPanel({
               </div>
             )}
           </div>
+
+          {/* フォント選択（有料版のみ） */}
+          {isPremium && (
+            <div style={{ marginBottom: '22px' }}>
+              <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '4px', textTransform: 'uppercase' }}>フォント</div>
+              <div style={{ fontSize: '11px', color: '#bbb', marginBottom: '10px' }}>日記・予定の表示フォントを選択</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {Object.entries(FONTS).map(([key, f]) => (
+                  <button key={key} onClick={() => onChange({ ...settings, fontFamily: key })}
+                    style={{ padding: '10px 14px', border: `0.5px solid ${(settings.fontFamily || 'gothic') === key ? '#555' : '#ddd'}`, borderRadius: '7px', cursor: 'pointer', textAlign: 'left', background: (settings.fontFamily || 'gothic') === key ? '#333' : '#fff', color: (settings.fontFamily || 'gothic') === key ? '#fff' : '#333', fontSize: '14px', fontFamily: f.family }}>
+                    {f.name}　<span style={{ fontSize: '12px', opacity: 0.7 }}>あいうえお ABC 123</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* テーマ */}
           <div style={{ marginBottom: '22px' }}>

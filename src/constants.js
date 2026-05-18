@@ -15,3 +15,9 @@ export const FS = {
   medium: { date:25, yearNum:16, event:14, evTime:12, rowMin:82 },
   large:  { date:30, yearNum:19, event:17, evTime:14, rowMin:96 },
 };
+
+export const FONTS = {
+  gothic:  { name: 'ゴシック',   family: 'Hiragino Sans, Meiryo, sans-serif' },
+  mincho:  { name: '明朝',       family: '"Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif' },
+  rounded: { name: '丸ゴシック', family: '"Hiragino Maru Gothic ProN", "Rounded Mplus 1c", sans-serif' },
+};
