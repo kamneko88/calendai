@@ -29,7 +29,11 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [settings, setSettings] = useState(loadSettings);
   const [dayCount, setDayCount] = useState(() => Math.min(loadSettings().defaultDayCount || 2, 2));
-  const [yearCount, setYearCount] = useState(() => loadSettings().defaultYearCount || 3);
+  const [yearCount, setYearCount] = useState(() => {
+  const saved = loadSettings().defaultYearCount || 3;
+  const premium = localStorage.getItem('myd_premium') === 'true';
+  return premium ? saved : Math.min(saved, 3);
+});
   const [base, setBase] = useState(() => {
     const dc = loadSettings().defaultDayCount || 2;
     const d = new Date(today);
@@ -306,78 +310,112 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: 'Hiragino Sans, Meiryo, sans-serif', padding: isMobile ? '8px' : '14px' }}>
 
       {/* ヘッダー */}
-<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', padding: isMobile ? '8px 10px' : '10px 14px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}`, gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', padding: isMobile ? '8px 10px' : '10px 14px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}`, gap: '8px' }}>
 
-  {/* 左：タイトル＋バッジ＋ナビ */}
-  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
+        {/* 左：統合メニュー＋バッジ＋ナビ */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
 
-    {/* タイトル */}
-    <div ref={viewMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
-      <div onClick={() => setShowViewMenu(o => !o)} style={{ cursor: 'pointer', userSelect: 'none' }}>
-        {!isMobile && <div style={{ fontSize: '9px', letterSpacing: '.15em', color: theme.monthColor, lineHeight: 1 }}>CalenDai</div>}
-        <div style={{ fontSize: isMobile ? '13px' : '16px', fontWeight: '600', color: theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{yearCount}年日記 ▾</div>
-      </div>
-      {showViewMenu && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#fff', border: '0.5px solid #ddd', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 1000, padding: '12px 16px', minWidth: '160px' }}>
-          <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '8px', letterSpacing: '.1em' }}>表示設定</div>
-          <div style={{ marginBottom: '10px' }}>
-            <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>年数</div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {(isPremium ? [3, 5] : [3]).map(n => (
-                <button key={n} onClick={() => {
-                  setYearCount(n);
-                  const newSettings = { ...settings, defaultYearCount: n };
-                  setSettings(newSettings);
-                  if (n === 5 && dayCount > 2) handleDayCountChange(2);
-                }}
-                  style={{ padding: '4px 12px', border: `0.5px solid ${yearCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: yearCount === n ? theme.btnActiveBg : '#fff', color: yearCount === n ? theme.btnActiveColor : theme.btnColor }}>
-                  {n}年
-                </button>
-              ))}
+          {/* 統合タイトルメニュー */}
+          <div ref={viewMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+            <div onClick={() => setShowViewMenu(o => !o)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+              {!isMobile && <div style={{ fontSize: '9px', letterSpacing: '.15em', color: theme.monthColor, lineHeight: 1 }}>CalenDai</div>}
+              <div style={{ fontSize: isMobile ? '12px' : '15px', fontWeight: '600', color: theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                {user.name}さんの{yearCount}年日記 ▾
+              </div>
             </div>
+
+            {showViewMenu && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#fff', border: '0.5px solid #ddd', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.14)', zIndex: 1000, minWidth: '260px', overflow: 'hidden' }}>
+
+                {/* アカウントセクション */}
+                <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '0.5px solid #eee' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: user.color, color: '#fff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '500', overflow: 'hidden' }}>
+                    {user.picture ? <img src={user.picture} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user.initials}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '13px', fontWeight: '500', color: '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                    <div style={{ fontSize: '11px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                  </div>
+                  <div style={{ fontSize: '8px', fontWeight: '700', padding: '2px 6px', borderRadius: '3px', flexShrink: 0, background: isPremium ? theme.currentYearColor : theme.subColor, color: '#fff', fontFamily: 'monospace' }}>
+                    {isPremium ? 'PRO' : 'FREE'}
+                  </div>
+                </div>
+
+                {/* 表示設定セクション */}
+                <div style={{ padding: '12px 16px', borderBottom: '0.5px solid #eee' }}>
+                  <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>表示設定</div>
+                  <div style={{ marginBottom: '8px' }}>
+                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '5px' }}>年数</div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      {(isPremium ? [3, 5] : [3]).map(n => (
+                        <button key={n} onClick={() => {
+                          setYearCount(n);
+                          setSettings(s => ({ ...s, defaultYearCount: n }));
+                          if (n === 5 && dayCount > 2) handleDayCountChange(2);
+                        }}
+                          style={{ padding: '4px 14px', border: `0.5px solid ${yearCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: yearCount === n ? theme.btnActiveBg : '#fff', color: yearCount === n ? theme.btnActiveColor : theme.btnColor }}>
+                          {n}年
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '5px' }}>日数</div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      {[1, 2].map(n => (
+                        <button key={n} onClick={() => {
+                          handleDayCountChange(n);
+                          setSettings(s => ({ ...s, defaultDayCount: n }));
+                        }}
+                          style={{ padding: '4px 14px', border: `0.5px solid ${dayCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: dayCount === n ? theme.btnActiveBg : '#fff', color: dayCount === n ? theme.btnActiveColor : theme.btnColor }}>
+                          {n}日
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 設定・ログアウト */}
+                <div style={{ padding: '6px 8px' }}>
+                  <button onClick={() => { setShowViewMenu(false); setShowSettings(true); }}
+                    style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '13px', color: '#333', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    ⚙️ 設定
+                  </button>
+                  <button onClick={() => { setShowViewMenu(false); handleLogout(); }}
+                    style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '13px', color: '#e74c3c', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#fff5f5'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    🚪 ログアウト
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          <div>
-            <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>日数</div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {[1, 2].map(n => (
-                <button key={n} onClick={() => {
-                  handleDayCountChange(n);
-                  const newSettings = { ...settings, defaultDayCount: n };
-                  setSettings(newSettings);
-                }}
-                  style={{ padding: '4px 12px', border: `0.5px solid ${dayCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: dayCount === n ? theme.btnActiveBg : '#fff', color: dayCount === n ? theme.btnActiveColor : theme.btnColor }}>
-                  {n}日
-                </button>
-              ))}
-            </div>
+
+          {/* FREE/PROバッジ（ヘッダー常時表示・テスト確認用） */}
+          <div style={{ fontSize: '8px', fontWeight: '700', letterSpacing: '.05em', padding: '1px 5px', borderRadius: '3px', flexShrink: 0, background: isPremium ? theme.currentYearColor : theme.subColor, color: theme.pageBg, opacity: 0.85, fontFamily: 'monospace' }}>
+            {isPremium ? 'PRO' : 'FREE'}
           </div>
+
+          {/* ナビゲーション */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+            <button onClick={() => navigate(-1)} style={btnStyle(false)}>◀</button>
+            <button onClick={goToday} style={btnStyle(false)}>今日</button>
+            <button onClick={() => navigate(1)} style={btnStyle(false)}>▶</button>
+          </div>
+
+          {/* PC用ジャンプ行 */}
+          {!isMobile && jumpRow}
         </div>
-      )}
-    </div>
 
-    {/* FREE/PROバッジ */}
-    <div style={{ fontSize: '8px', fontWeight: '700', letterSpacing: '.05em', padding: '1px 5px', borderRadius: '3px', flexShrink: 0, background: isPremium ? theme.currentYearColor : theme.subColor, color: theme.pageBg, opacity: 0.85, fontFamily: 'monospace' }}>
-      {isPremium ? 'PRO' : 'FREE'}
-    </div>
+        {/* 右：記念日ボタンのみ */}
+        <button onClick={() => setShowAnniversary(true)} style={{ ...btnStyle(false), flexShrink: 0 }}>
+          🎖{!isMobile && ' 記念日'}
+        </button>
 
-    {/* ナビゲーション */}
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-      <button onClick={() => navigate(-1)} style={btnStyle(false)}>◀</button>
-      <button onClick={goToday} style={btnStyle(false)}>今日</button>
-      <button onClick={() => navigate(1)} style={btnStyle(false)}>▶</button>
-    </div>
-
-    {/* PC用ジャンプ行 */}
-    {!isMobile && jumpRow}
-  </div>
-
-  {/* 右：記念日＋アカウント */}
-  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-    <button onClick={() => setShowAnniversary(true)} style={btnStyle(false)}>🎖{!isMobile && ' 記念日'}</button>
-    <UserMenu user={user} onSettingsOpen={() => setShowSettings(true)} onLogout={handleLogout} />
-  </div>
-
-</div>
+      </div>
 
       {/* スマホ用ジャンプ行 */}
       {isMobile && (
