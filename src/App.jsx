@@ -139,7 +139,7 @@ export default function App() {
 
       // 記念日カレンダーを自動検出（未設定の場合のみ）
       if (!localStorage.getItem('myd_anniversary_cal')) {
-        const autoAnniv = cals.find(c => /anniversary|記念日/i.test(c.summary));
+        const autoAnniv = cals.find(c => /anniversary|記念日|birthday|誕生日/i.test(c.summary));
         if (autoAnniv) {
           localStorage.setItem('myd_anniversary_cal', autoAnniv.id);
           setAnniversaryCalendarId(autoAnniv.id);
@@ -169,7 +169,7 @@ export default function App() {
     setSelectedCalendars(prev => {
       const exists = prev.some(c => c.id === cal.id);
       if (exists) return prev.filter(c => c.id !== cal.id);
-      if (prev.length >= 3) return prev;
+      if (prev.length >= (isPremium ? 5 : 2)) return prev;
       return [...prev, { id: cal.id, color: cal.backgroundColor || CAL_COLORS[calendars.indexOf(cal) % CAL_COLORS.length], name: cal.summary, showDescription: false }];
     });
   };

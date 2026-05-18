@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { CAL_COLORS, THEMES } from "../constants";
 
 export default function SettingsPanel({
   settings, onChange, onClose,
   calendars, selectedCalendars, onCalendarToggle, onDescriptionToggle,
-  onYearCountChange, onDayCountChange, onPinSetup, isPremium,
+  onPinSetup, isPremium,
   anniversaryCalendarId, onAnniversaryCalendarChange,
 }) {
+  const [calOpen, setCalOpen] = useState(false);
+  const [annivOpen, setAnnivOpen] = useState(false);
+  const maxCals = isPremium ? 5 : 2;
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -77,71 +82,115 @@ export default function SettingsPanel({
             </div>
           </div>
 
-          {/* 表示カレンダー */}
+          {/* 表示カレンダー（アコーディオン） */}
           {calendars.length > 0 && (
             <div style={{ marginBottom: '22px' }}>
-              <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '4px', textTransform: 'uppercase' }}>表示カレンダー（最大3つ）</div>
-              <div style={{ fontSize: '11px', color: '#bbb', marginBottom: '10px' }}>チェックしたカレンダーのデータを表示します</div>
-              {calendars.map((cal, i) => {
-                const isSelected = selectedCalendars.some(c => c.id === cal.id);
-                const selectedCal = selectedCalendars.find(c => c.id === cal.id);
-                const isDisabled = !isSelected && selectedCalendars.length >= 3;
-                return (
-                  <div key={cal.id} style={{ padding: '8px 0', borderBottom: '0.5px solid #f0f0f0' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.4 : 1 }}>
-                      <input type="checkbox" checked={isSelected} disabled={isDisabled} onChange={() => onCalendarToggle(cal)} style={{ width: '15px', height: '15px', flexShrink: 0 }} />
-                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
-                      <span style={{ fontSize: '13px', color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.summary}</span>
-                    </label>
-                    {isSelected && (
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', marginLeft: '25px', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={selectedCal?.showDescription || false}
-                          onChange={() => onDescriptionToggle(cal.id)}
-                          style={{ width: '13px', height: '13px', flexShrink: 0 }} />
-                        <span style={{ fontSize: '11px', color: '#888' }}>説明欄を表示する</span>
-                      </label>
-                    )}
+              {/* ヘッダー行 */}
+              <button onClick={() => setCalOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>表示カレンダー</span>
+                  <span style={{ fontSize: '10px', color: '#bbb' }}>（最大{maxCals}つ）</span>
+                </div>
+                <span style={{ fontSize: '10px', color: '#aaa' }}>{calOpen ? '▲' : '▼'}</span>
+              </button>
+
+              {/* 選択中カレンダーをチップ表示 */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: calOpen ? '10px' : '0' }}>
+                {selectedCalendars.length === 0 ? (
+                  <span style={{ fontSize: '11px', color: '#bbb' }}>未選択</span>
+                ) : selectedCalendars.map(cal => (
+                  <div key={cal.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', background: '#f5f5f5', border: '0.5px solid #eee' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cal.color }} />
+                    <span style={{ fontSize: '11px', color: '#555' }}>{cal.name}</span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+
+              {/* 展開リスト */}
+              {calOpen && (
+                <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
+                  {calendars.map((cal, i) => {
+                    const isSelected = selectedCalendars.some(c => c.id === cal.id);
+                    const selectedCal = selectedCalendars.find(c => c.id === cal.id);
+                    const isDisabled = !isSelected && selectedCalendars.length >= maxCals;
+                    return (
+                      <div key={cal.id} style={{ borderBottom: '0.5px solid #f5f5f5', background: isSelected ? '#fafafa' : '#fff' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.4 : 1 }}>
+                          <input type="checkbox" checked={isSelected} disabled={isDisabled} onChange={() => onCalendarToggle(cal)} style={{ width: '15px', height: '15px', flexShrink: 0 }} />
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
+                          <span style={{ fontSize: '13px', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.summary}</span>
+                        </label>
+                        {isSelected && (
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 12px 10px 37px', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={selectedCal?.showDescription || false}
+                              onChange={() => onDescriptionToggle(cal.id)}
+                              style={{ width: '13px', height: '13px', flexShrink: 0 }} />
+                            <span style={{ fontSize: '11px', color: '#888' }}>説明欄を表示する</span>
+                          </label>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
-          {/* 記念日カレンダー */}
+          {/* 記念日カレンダー（アコーディオン） */}
           {calendars.length > 0 && (
             <div>
-              <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '4px', textTransform: 'uppercase' }}>記念日カレンダー</div>
-              <div style={{ fontSize: '11px', color: '#bbb', marginBottom: '10px' }}>「記念日一覧」に表示するカレンダーを1つ選択します</div>
-              {/* 未設定 */}
-              <div style={{ padding: '8px 0', borderBottom: '0.5px solid #f0f0f0' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                  <input type="radio" name="anniversaryCal" checked={!anniversaryCalendarId}
-                    onChange={() => onAnniversaryCalendarChange(null)}
-                    style={{ width: '15px', height: '15px', flexShrink: 0 }} />
-                  <span style={{ fontSize: '13px', color: '#aaa' }}>未設定</span>
-                </label>
+              {/* ヘッダー行 */}
+              <button onClick={() => setAnnivOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
+                <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>記念日カレンダー</span>
+                <span style={{ fontSize: '10px', color: '#aaa' }}>{annivOpen ? '▲' : '▼'}</span>
+              </button>
+
+              {/* 選択中をチップ表示 */}
+              <div style={{ marginBottom: annivOpen ? '10px' : '0' }}>
+                {!anniversaryCalendarId ? (
+                  <span style={{ fontSize: '11px', color: '#bbb' }}>未設定</span>
+                ) : (() => {
+                  const cal = calendars.find(c => c.id === anniversaryCalendarId);
+                  return cal ? (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', background: '#f5f5f5', border: '0.5px solid #eee' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cal.backgroundColor || '#c0607a' }} />
+                      <span style={{ fontSize: '11px', color: '#555' }}>{cal.summary}</span>
+                    </div>
+                  ) : null;
+                })()}
               </div>
-              {calendars.map((cal, i) => {
-                const isAnniv = /anniversary|記念日/i.test(cal.summary);
-                return (
-                  <div key={cal.id} style={{ padding: '8px 0', borderBottom: '0.5px solid #f0f0f0' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                      <input type="radio" name="anniversaryCal" checked={anniversaryCalendarId === cal.id}
-                        onChange={() => onAnniversaryCalendarChange(cal.id)}
-                        style={{ width: '15px', height: '15px', flexShrink: 0 }} />
-                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
-                      <span style={{ fontSize: '13px', color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{cal.summary}</span>
-                      {isAnniv && <span style={{ fontSize: '10px', color: '#fff', background: '#c0607a', borderRadius: '3px', padding: '1px 5px', flexShrink: 0 }}>推奨</span>}
-                    </label>
+
+              {/* 展開リスト */}
+              {annivOpen && (
+                <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
+                  {/* 未設定 */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: 'pointer', borderBottom: '0.5px solid #f5f5f5' }}>
+                    <input type="radio" name="anniversaryCal" checked={!anniversaryCalendarId}
+                      onChange={() => onAnniversaryCalendarChange(null)}
+                      style={{ width: '15px', height: '15px', flexShrink: 0 }} />
+                    <span style={{ fontSize: '13px', color: '#aaa' }}>未設定</span>
+                  </label>
+                  {calendars.map((cal, i) => {
+                    const isAnniv = /anniversary|記念日|birthday|誕生日/i.test(cal.summary);
+                    return (
+                      <label key={cal.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: 'pointer', borderBottom: '0.5px solid #f5f5f5', background: anniversaryCalendarId === cal.id ? '#fafafa' : '#fff' }}>
+                        <input type="radio" name="anniversaryCal" checked={anniversaryCalendarId === cal.id}
+                          onChange={() => onAnniversaryCalendarChange(cal.id)}
+                          style={{ width: '15px', height: '15px', flexShrink: 0 }} />
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
+                        <span style={{ fontSize: '13px', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.summary}</span>
+                        {isAnniv && <span style={{ fontSize: '10px', color: '#fff', background: '#c0607a', borderRadius: '3px', padding: '1px 5px', flexShrink: 0 }}>推奨</span>}
+                      </label>
+                    );
+                  })}
+                  {/* 将来実装プレースホルダー */}
+                  <div style={{ padding: '10px 12px' }}>
+                    <button disabled style={{ fontSize: '12px', color: '#ccc', background: 'none', border: '0.5px dashed #ddd', borderRadius: '6px', padding: '6px 12px', cursor: 'not-allowed' }}>
+                      ＋ 新しく記念日カレンダーを作成（近日実装）
+                    </button>
                   </div>
-                );
-              })}
-              {/* 将来実装：新規カレンダー作成ボタン（プレースホルダー） */}
-              <div style={{ padding: '10px 0' }}>
-                <button disabled style={{ fontSize: '12px', color: '#ccc', background: 'none', border: '0.5px dashed #ddd', borderRadius: '6px', padding: '6px 12px', cursor: 'not-allowed' }}>
-                  ＋ 新しく記念日カレンダーを作成（近日実装）
-                </button>
-              </div>
+                </div>
+              )}
             </div>
           )}
 

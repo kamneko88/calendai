@@ -19,7 +19,7 @@ export async function fetchCalendarEvents(accessToken, calendarId, year, month, 
 }
 
 export async function fetchAllCalendars(accessToken) {
-  const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+  const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?showHidden=true', {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
   if (!res.ok) return [];
