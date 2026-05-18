@@ -7,8 +7,7 @@ export default function SettingsPanel({
   onPinSetup, isPremium,
   anniversaryCalendarId, onAnniversaryCalendarChange,
 }) {
-  const [calOpen, setCalOpen] = useState(false);
-  const [annivOpen, setAnnivOpen] = useState(false);
+  const [openSection, setOpenSection] = useState(null);
   const maxCals = isPremium ? 5 : 2;
 
   return (
@@ -102,16 +101,16 @@ export default function SettingsPanel({
           {calendars.length > 0 && (
             <div style={{ marginBottom: '22px' }}>
               {/* ヘッダー行 */}
-              <button onClick={() => setCalOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
+              <button onClick={() => setOpenSection(o => o === 'cal' ? null : 'cal')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>表示カレンダー</span>
                   <span style={{ fontSize: '10px', color: '#bbb' }}>（最大{maxCals}つ）</span>
                 </div>
-                <span style={{ fontSize: '10px', color: '#aaa' }}>{calOpen ? '▲' : '▼'}</span>
+                <span style={{ fontSize: '10px', color: '#aaa' }}>{openSection === 'cal' ? '▲' : '▼'}</span>
               </button>
 
               {/* 選択中カレンダーをチップ表示 */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: calOpen ? '10px' : '0' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: openSection === 'cal' ? '10px' : '0' }}>
                 {selectedCalendars.length === 0 ? (
                   <span style={{ fontSize: '11px', color: '#bbb' }}>未選択</span>
                 ) : selectedCalendars.map(cal => (
@@ -123,7 +122,7 @@ export default function SettingsPanel({
               </div>
 
               {/* 展開リスト */}
-              {calOpen && (
+              {openSection === 'cal' && (
                 <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
                   {calendars.map((cal, i) => {
                     const isSelected = selectedCalendars.some(c => c.id === cal.id);
@@ -156,13 +155,13 @@ export default function SettingsPanel({
           {calendars.length > 0 && (
             <div>
               {/* ヘッダー行 */}
-              <button onClick={() => setAnnivOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
+              <button onClick={() => setOpenSection(o => o === 'anniv' ? null : 'anniv')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
                 <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>記念日カレンダー</span>
-                <span style={{ fontSize: '10px', color: '#aaa' }}>{annivOpen ? '▲' : '▼'}</span>
+                <span style={{ fontSize: '10px', color: '#aaa' }}>{openSection === 'anniv' ? '▲' : '▼'}</span>
               </button>
 
               {/* 選択中をチップ表示 */}
-              <div style={{ marginBottom: annivOpen ? '10px' : '0' }}>
+              <div style={{ marginBottom: openSection === 'anniv' ? '10px' : '0' }}>
                 {!anniversaryCalendarId ? (
                   <span style={{ fontSize: '11px', color: '#bbb' }}>未設定</span>
                 ) : (() => {
@@ -177,7 +176,7 @@ export default function SettingsPanel({
               </div>
 
               {/* 展開リスト */}
-              {annivOpen && (
+              {openSection === 'anniv' && (
                 <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
                   {/* 未設定 */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: 'pointer', borderBottom: '0.5px solid #f5f5f5' }}>
