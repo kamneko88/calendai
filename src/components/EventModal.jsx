@@ -1,6 +1,6 @@
 import { WDS } from "../constants";
 
-export default function EventModal({ event, calendarName, onClose }) {
+export default function EventModal({ event, calendarName, onClose, onEdit, isPremium }) {
   if (!event) return null;
   const d = new Date(event.year, event.month - 1, event.day);
   const dateStr = `${event.year}年${event.month}月${event.day}日（${WDS[d.getDay()]}）`;
@@ -11,7 +11,15 @@ export default function EventModal({ event, calendarName, onClose }) {
       <div style={{ background: '#fdfaf5', borderRadius: '12px', width: '100%', maxWidth: '340px', border: '0.5px solid #ddd', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
         <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '13px', fontWeight: '500', color: '#555' }}>予定の詳細</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#aaa', lineHeight: 1 }}>×</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isPremium && onEdit && (
+              <button onClick={onEdit}
+                style={{ fontSize: '12px', color: '#666', background: '#f5f5f5', border: '0.5px solid #ddd', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer' }}>
+                ✏ 編集
+              </button>
+            )}
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#aaa', lineHeight: 1 }}>×</button>
+          </div>
         </div>
         <div style={{ padding: '20px 16px' }}>
           <div style={{ fontSize: '18px', fontWeight: '500', color: '#222', marginBottom: '16px', lineHeight: 1.4 }}>{event.t}</div>

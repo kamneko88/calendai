@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { createCalendarEvent } from "../api";
+import { createCalendarEvent, updateCalendarEvent } from "../api";
 
-export default function DiaryModal({ date, year, accessToken, selectedCalendars, onClose, onSaved, theme }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [calendarId, setCalendarId] = useState(selectedCalendars[0]?.id || '');
+export default function DiaryModal({ date, year, accessToken, selectedCalendars, editEvent, onClose, onSaved, theme }) {
+  const isEdit = !!editEvent;
+  const [title, setTitle] = useState(isEdit ? editEvent.title : '');
+  const [description, setDescription] = useState(isEdit ? editEvent.description : '');
+  const [calendarId, setCalendarId] = useState(isEdit ? editEvent.calendarId : (selectedCalendars[0]?.id || ''));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const targetDate = new Date(year, date.getMonth(), date.getDate());
-  const dateLabel = `${year}年${date.getMonth() + 1}月${date.getDate()}日`;
+  const targetDate = isEdit ? editEvent.date : new Date(year, date.getMonth(), date.getDate());
+  const dateLabel = `${targetDate.getFullYear()}年${targetDate.getMonth() + 1}月${targetDate.getDate()}日`;
 
   const handleSave = async () => {
     if (!title.trim()) { setError('タイトルを入力してください'); return; }
@@ -17,7 +18,11 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
     setSaving(true);
     setError('');
     try {
-      await createCalendarEvent(accessToken, calendarId, targetDate, title.trim(), description.trim());
+      if (isEdit) {
+        await updateCalendarEvent(accessToken, editEvent.calendarId, editEvent.id, title.trim(), description.trim());
+      } else {
+        await createCalendarEvent(accessToken, calendarId, targetDate, title.trim(), description.trim());
+      }
       onSaved();
       onClose();
     } catch (e) {
@@ -34,7 +39,7 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
         {/* ヘッダー */}
         <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${theme.rowBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: '10px', color: theme.monthColor, letterSpacing: '.1em', textTransform: 'uppercase' }}>diary</div>
+            <div style={{ fontSize: '10px', color: theme.monthColor, letterSpacing: '.1em', textTransform: 'uppercase' }}>{isEdit ? 'edit diary' : 'diary'}</div>
             <div style={{ fontSize: '15px', fontWeight: '500', color: theme.dateColor }}>{dateLabel}</div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: theme.subColor, lineHeight: 1 }}>×</button>
@@ -68,8 +73,8 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
             />
           </div>
 
-          {/* カレンダー選択 */}
-          {selectedCalendars.length > 1 && (
+          {/* カレンダー選択（新規作成時のみ） */}
+          {!isEdit && selectedCalendars.length > 1 && (
             <div style={{ marginBottom: '14px' }}>
               <div style={{ fontSize: '11px', color: theme.subColor, marginBottom: '6px' }}>保存先カレンダー</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -86,7 +91,6 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
             </div>
           )}
 
-          {/* エラー */}
           {error && <div style={{ fontSize: '12px', color: '#e74c3c', marginBottom: '10px' }}>{error}</div>}
 
           {/* ボタン */}
@@ -97,7 +101,7 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
             </button>
             <button onClick={handleSave} disabled={saving}
               style={{ flex: 2, padding: '10px', border: 'none', borderRadius: '7px', cursor: saving ? 'not-allowed' : 'pointer', background: theme.pageHeaderBorder, color: theme.pageBg, fontSize: '13px', fontWeight: '500', opacity: saving ? 0.6 : 1 }}>
-              {saving ? '保存中...' : '保存する'}
+              {saving ? '保存中...' : isEdit ? '更新する' : '保存する'}
             </button>
           </div>
         </div>

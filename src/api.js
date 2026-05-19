@@ -7,6 +7,7 @@ export async function fetchCalendarEvents(accessToken, calendarId, year, month, 
   if (!res.ok) return [];
   const data = await res.json();
   return (data.items || []).map(ev => ({
+    id: ev.id,
     t: ev.summary || '（タイトルなし）',
     h: ev.start.dateTime
       ? new Date(ev.start.dateTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
@@ -83,5 +84,21 @@ export async function createCalendarEvent(accessToken, calendarId, date, title, 
     }
   );
   if (!res.ok) throw new Error('イベントの作成に失敗しました');
+  return await res.json();
+}
+
+export async function updateCalendarEvent(accessToken, calendarId, eventId, title, description) {
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        summary: title,
+        description: description || '',
+      }),
+    }
+  );
+  if (!res.ok) throw new Error('イベントの更新に失敗しました');
   return await res.json();
 }

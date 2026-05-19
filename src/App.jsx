@@ -1,3 +1,4 @@
+import DiaryModal from "./components/DiaryModal";
 import { useState, useEffect, useRef } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { THEMES, CAL_COLORS, FONTS } from "./constants";
@@ -64,6 +65,7 @@ export default function App() {
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [downgradeNotice, setDowngradeNotice] = useState(false);
   const [upgradeNotice, setUpgradeNotice] = useState(false);
+  const [editEvent, setEditEvent] = useState(null);
   const [anniversaryCalendarId, setAnniversaryCalendarId] = useState(
     () => localStorage.getItem('myd_anniversary_cal') || null
   );
@@ -531,16 +533,41 @@ export default function App() {
             }} />
         )
       }
+
+      {editEvent && (
+        <DiaryModal
+          date={editEvent.date}
+          year={editEvent.date.getFullYear()}
+          accessToken={user.accessToken}
+          selectedCalendars={selectedCalendars}
+          editEvent={editEvent}
+          onClose={() => setEditEvent(null)}
+          onSaved={() => { setEditEvent(null); }}
+          theme={theme} />
+      )}
+
       {
         showPinSetup && (
           <PinSetupScreen onComplete={() => { setShowPinSetup(false); setIsLocked(true); }} onCancel={() => setShowPinSetup(false)} />
         )
       }
-      {
-        selectedEvent && (
-          <EventModal event={selectedEvent} calendarName={calName(selectedEvent)} onClose={() => setSelectedEvent(null)} />
-        )
-      }
+      {selectedEvent && (
+        <EventModal
+          event={selectedEvent}
+          calendarName={calName(selectedEvent)}
+          isPremium={isPremium}
+          onEdit={() => {
+            setEditEvent({
+              id: selectedEvent.id,
+              calendarId: selectedEvent.calendarId,
+              title: selectedEvent.t,
+              description: selectedEvent.description,
+              date: new Date(selectedEvent.year, selectedEvent.month - 1, selectedEvent.day),
+            });
+            setSelectedEvent(null);
+          }}
+          onClose={() => setSelectedEvent(null)} />
+      )}
       {
         tokenExpired && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
