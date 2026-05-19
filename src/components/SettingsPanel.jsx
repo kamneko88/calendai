@@ -1,14 +1,40 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { CAL_COLORS, THEMES, FONTS } from "../constants";
 
 export default function SettingsPanel({
   settings, onChange, onClose,
   calendars, selectedCalendars, onCalendarToggle, onDescriptionToggle,
+  onCalendarReorder,
   onPinSetup, isPremium,
   anniversaryCalendarId, onAnniversaryCalendarChange,
 }) {
   const [openSection, setOpenSection] = useState(null);
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const longPressTimer = useRef(null);
+  const listRef = useRef(null);
   const maxCals = isPremium ? 5 : 2;
+  const isMobile = window.innerWidth < 640;
+
+  const handleReorder = (from, to) => {
+    if (from === null || to === null || from === to) return;
+    const newList = [...selectedCalendars];
+    const [removed] = newList.splice(from, 1);
+    newList.splice(to, 0, removed);
+    onCalendarReorder(newList);
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const getTouchIndex = (touchY) => {
+    if (!listRef.current) return null;
+    const items = Array.from(listRef.current.children);
+    for (let i = 0; i < items.length; i++) {
+      const rect = items[i].getBoundingClientRect();
+      if (touchY >= rect.top && touchY <= rect.bottom) return i;
+    }
+    return null;
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
@@ -101,7 +127,7 @@ export default function SettingsPanel({
           {calendars.length > 0 && (
             <div style={{ marginBottom: '22px' }}>
               {/* ヘッダー行 */}
-              <button onClick={() => setOpenSection(o => o === 'cal' ? null : 'cal')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
+              <button onClick={() => setOpenSection(o => o === 'cal' ? null : 'cal')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 10px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>表示カレンダー</span>
                   <span style={{ fontSize: '10px', color: '#bbb' }}>（最大{maxCals}つ）</span>
@@ -109,21 +135,65 @@ export default function SettingsPanel({
                 <span style={{ fontSize: '10px', color: '#aaa' }}>{openSection === 'cal' ? '▲' : '▼'}</span>
               </button>
 
-              {/* 選択中カレンダーをチップ表示 */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: openSection === 'cal' ? '10px' : '0' }}>
-                {selectedCalendars.length === 0 ? (
-                  <span style={{ fontSize: '11px', color: '#bbb' }}>未選択</span>
-                ) : selectedCalendars.map(cal => (
-                  <div key={cal.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', background: '#f5f5f5', border: '0.5px solid #eee' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cal.color }} />
-                    <span style={{ fontSize: '11px', color: '#555' }}>{cal.name}</span>
+              {/* 選択中カレンダー：縦並びドラッグリスト */}
+              {selectedCalendars.length === 0 ? (
+                <div style={{ fontSize: '11px', color: '#bbb', marginBottom: '8px' }}>未選択</div>
+              ) : (
+                <>
+                  <div ref={listRef} style={{ marginBottom: '6px' }}>
+                    {selectedCalendars.map((cal, i) => (
+                      <div
+                        key={cal.id}
+                        draggable={!isMobile}
+                        onDragStart={() => setDragIndex(i)}
+                        onDragOver={e => { e.preventDefault(); setDragOverIndex(i); }}
+                        onDrop={() => handleReorder(dragIndex, i)}
+                        onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
+                        onTouchStart={() => {
+                          longPressTimer.current = setTimeout(() => {
+                            setDragIndex(i);
+                            if (navigator.vibrate) navigator.vibrate(40);
+                          }, 500);
+                        }}
+                        onTouchMove={e => {
+                          if (dragIndex === null) { clearTimeout(longPressTimer.current); return; }
+                          e.preventDefault();
+                          const idx = getTouchIndex(e.touches[0].clientY);
+                          if (idx !== null) setDragOverIndex(idx);
+                        }}
+                        onTouchEnd={() => {
+                          clearTimeout(longPressTimer.current);
+                          handleReorder(dragIndex, dragOverIndex);
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '10px',
+                          padding: '9px 10px', marginBottom: '4px',
+                          borderRadius: '7px',
+                          border: `1px solid ${dragIndex === i ? '#aaa' : dragOverIndex === i ? '#bbb' : '#eee'}`,
+                          background: dragIndex === i ? '#f0f0f0' : dragOverIndex === i ? '#fafafa' : '#fff',
+                          opacity: dragIndex === i ? 0.7 : 1,
+                          cursor: isMobile ? 'default' : 'grab',
+                          userSelect: 'none',
+                          touchAction: dragIndex !== null ? 'none' : 'auto',
+                          transition: 'background 0.1s, border 0.1s',
+                        }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: cal.color, flexShrink: 0 }} />
+                        <span style={{ fontSize: '13px', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.name}</span>
+                        {!isMobile && <span style={{ fontSize: '14px', color: '#ccc', cursor: 'grab', flexShrink: 0 }}>⠿</span>}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  {selectedCalendars.length > 1 && (
+                    <div style={{ fontSize: '10px', color: '#bbb', marginBottom: '8px' }}>
+                      {isMobile ? '長押しで並べ替えられます' : 'ドラッグ（⠿）で並べ替えられます'}
+                    </div>
+                  )}
+                </>
+              )}
 
-              {/* 展開リスト */}
+              {/* 展開リスト（追加・削除） */}
               {openSection === 'cal' && (
-                <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden', marginTop: '8px' }}>
                   {calendars.map((cal, i) => {
                     const isSelected = selectedCalendars.some(c => c.id === cal.id);
                     const selectedCal = selectedCalendars.find(c => c.id === cal.id);
@@ -154,13 +224,10 @@ export default function SettingsPanel({
           {/* 記念日カレンダー（アコーディオン） */}
           {calendars.length > 0 && (
             <div>
-              {/* ヘッダー行 */}
               <button onClick={() => setOpenSection(o => o === 'anniv' ? null : 'anniv')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
                 <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>記念日カレンダー</span>
                 <span style={{ fontSize: '10px', color: '#aaa' }}>{openSection === 'anniv' ? '▲' : '▼'}</span>
               </button>
-
-              {/* 選択中をチップ表示 */}
               <div style={{ marginBottom: openSection === 'anniv' ? '10px' : '0' }}>
                 {!anniversaryCalendarId ? (
                   <span style={{ fontSize: '11px', color: '#bbb' }}>未設定</span>
@@ -174,11 +241,8 @@ export default function SettingsPanel({
                   ) : null;
                 })()}
               </div>
-
-              {/* 展開リスト */}
               {openSection === 'anniv' && (
                 <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
-                  {/* 未設定 */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: 'pointer', borderBottom: '0.5px solid #f5f5f5' }}>
                     <input type="radio" name="anniversaryCal" checked={!anniversaryCalendarId}
                       onChange={() => onAnniversaryCalendarChange(null)}
@@ -198,7 +262,6 @@ export default function SettingsPanel({
                       </label>
                     );
                   })}
-                  {/* 将来実装プレースホルダー */}
                   <div style={{ padding: '10px 12px' }}>
                     <button disabled style={{ fontSize: '12px', color: '#ccc', background: 'none', border: '0.5px dashed #ddd', borderRadius: '6px', padding: '6px 12px', cursor: 'not-allowed' }}>
                       ＋ 新しく記念日カレンダーを作成（近日実装）

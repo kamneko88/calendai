@@ -517,6 +517,10 @@ export default function App() {
             calendars={calendars} selectedCalendars={selectedCalendars} onCalendarToggle={handleCalendarToggle}
             onYearCountChange={setYearCount} onDayCountChange={handleDayCountChange}
             onDescriptionToggle={(calId) => setSelectedCalendars(prev => prev.map(c => c.id === calId ? { ...c, showDescription: !c.showDescription } : c))}
+            onCalendarReorder={(newOrder) => {
+              setSelectedCalendars(newOrder);
+              localStorage.setItem('myd_selected_calendars', JSON.stringify(newOrder));
+            }}
             onPinSetup={() => { setShowSettings(false); setShowPinSetup(true); }}
             isPremium={isPremium}
             anniversaryCalendarId={anniversaryCalendarId}
