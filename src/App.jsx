@@ -62,6 +62,8 @@ export default function App() {
   const [welcomeStartYear, setWelcomeStartYear] = useState(null);
   const [skipWelcome, setSkipWelcome] = useState(() => localStorage.getItem('myd_skip_welcome') === 'true');
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [downgradeNotice, setDowngradeNotice] = useState(false);
+  const [upgradeNotice, setUpgradeNotice] = useState(false);
   const [anniversaryCalendarId, setAnniversaryCalendarId] = useState(
     () => localStorage.getItem('myd_anniversary_cal') || null
   );
@@ -159,6 +161,13 @@ export default function App() {
   const handleLogout = () => {
     setUser(null); setCalendars([]); setSelectedCalendars([]); setTokenExpired(false);
     localStorage.removeItem('myd_user');
+  };
+
+  const handleUpgrade = () => {
+    setIsPremium(true);
+    localStorage.setItem('myd_premium', 'true');
+    setUpgradeNotice(true);
+    setTimeout(() => setUpgradeNotice(false), 5000);
   };
 
   const handleJumpToDate = (month, day) => {
@@ -396,13 +405,21 @@ export default function App() {
                     const next = !isPremium;
                     setIsPremium(next);
                     if (next) {
-                      localStorage.setItem('myd_premium', 'true');
+                      handleUpgrade();
                     } else {
                       localStorage.removeItem('myd_premium');
                       if (yearCount > 3) {
                         setYearCount(3);
                         setSettings(s => ({ ...s, defaultYearCount: 3 }));
                       }
+                      if (selectedCalendars.length > 2) {
+                        const reduced = selectedCalendars.slice(0, 2);
+                        setSelectedCalendars(reduced);
+                        localStorage.setItem('myd_selected_calendars', JSON.stringify(reduced));
+                      }
+                      setSettings(s => ({ ...s, fontFamily: 'gothic' }));
+                      setDowngradeNotice(true);
+                      setTimeout(() => setDowngradeNotice(false), 4000);
                     }
                     setShowViewMenu(false);
                   }}
@@ -461,6 +478,19 @@ export default function App() {
             theme={theme} />
         ))}
       </div>
+
+      {/* ダウングレード通知トースト */}
+      {downgradeNotice && (
+        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#333', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          FREE版では表示カレンダーは2つまでです。
+        </div>
+      )}
+
+      {upgradeNotice && (
+        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#2ecc71', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', textAlign: 'center' }}>
+          🎉 PROになりました！全機能が使えます。
+        </div>
+      )}
 
       {/* フッター */}
       <div style={{ textAlign: 'center', padding: '12px', fontSize: '10px', color: theme.subColor, letterSpacing: '.1em' }}>
