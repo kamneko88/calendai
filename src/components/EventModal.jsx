@@ -1,3 +1,4 @@
+import { Calendar, Clock, Pencil } from 'lucide-react';
 import { WDS } from "../constants";
 
 export default function EventModal({ event, calendarName, onClose, onEdit, isPremium }) {
@@ -14,8 +15,8 @@ export default function EventModal({ event, calendarName, onClose, onEdit, isPre
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isPremium && onEdit && (
               <button onClick={onEdit}
-                style={{ fontSize: '12px', color: '#666', background: '#f5f5f5', border: '0.5px solid #ddd', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer' }}>
-                ✏ 編集
+                style={{ fontSize: '12px', color: '#666', background: '#f5f5f5', border: '0.5px solid #ddd', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Pencil size={12} strokeWidth={1.8} /> 編集
               </button>
             )}
             <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#aaa', lineHeight: 1 }}>×</button>
@@ -23,8 +24,14 @@ export default function EventModal({ event, calendarName, onClose, onEdit, isPre
         </div>
         <div style={{ padding: '20px 16px' }}>
           <div style={{ fontSize: '18px', fontWeight: '500', color: '#222', marginBottom: '16px', lineHeight: 1.4 }}>{event.t}</div>
-          <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>📅 {dateStr}</div>
-          <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>🕐 {event.h}</div>
+          <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Calendar size={13} strokeWidth={1.8} color="#888" />
+            {dateStr}
+          </div>
+          <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Clock size={13} strokeWidth={1.8} color="#888" />
+            {event.h}
+          </div>
           {calendarName && (
             <div style={{ fontSize: '13px', color: '#666', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: event.description ? '12px' : '0' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: event.color, flexShrink: 0 }} />

@@ -1,8 +1,9 @@
 import DiaryModal from "./components/DiaryModal";
+import TodayInPastBanner from "./components/TodayInPastBanner";
 import { useState, useEffect, useRef } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { THEMES, CAL_COLORS, FONTS } from "./constants";
-import { fetchAllCalendars, fetchOldestEventYear } from "./api";
+import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents } from "./api";
 import { getInitials, useWindowWidth, useSwipe } from "./hooks";
 import LockScreen from "./components/LockScreen";
 import PinSetupScreen from "./components/PinSetupScreen";
@@ -13,6 +14,7 @@ import EventModal from "./components/EventModal";
 import SettingsPanel from "./components/SettingsPanel";
 import DayPage from "./components/DayPage";
 import AnniversaryTab from "./components/AnniversaryTab";
+import { Settings, LogOut, Star, Clock } from 'lucide-react';
 
 export default function App() {
   const today = new Date();
@@ -24,7 +26,7 @@ export default function App() {
       const saved = localStorage.getItem('myd_settings');
       if (saved) return JSON.parse(saved);
     } catch { }
-    return { stepNav: false, fontSize: 'small', defaultYearCount: 3, defaultDayCount: 2, theme: 'classic', fontFamily: 'gothic' };
+    return { stepNav: false, fontSize: 'small', defaultYearCount: 3, defaultDayCount: 2, theme: 'classic', fontFamily: 'gothic', todayBanner: true };
   };
 
   const [user, setUser] = useState(null);
@@ -69,7 +71,9 @@ export default function App() {
   const [anniversaryCalendarId, setAnniversaryCalendarId] = useState(
     () => localStorage.getItem('myd_anniversary_cal') || null
   );
-
+  const [showTodayBanner, setShowTodayBanner] = useState(false);
+  const [todayBannerData, setTodayBannerData] = useState([]);
+  const bannerCheckedRef = useRef(false);
   const theme = THEMES[settings.theme] || THEMES.classic;
   const viewMenuRef = useRef(null);
 
@@ -112,6 +116,35 @@ export default function App() {
       localStorage.setItem('myd_selected_calendars', JSON.stringify(selectedCalendars));
     }
   }, [selectedCalendars]);
+
+  // 「今日の○年前」バナー（PRO限定・起動時1回）
+  useEffect(() => {
+    if (!user || showWelcome || isProcessingLogin) return;
+    if (!isPremium) return;
+    if (settings.todayBanner === false) return;
+    if (bannerCheckedRef.current) return;
+    if (selectedCalendars.length === 0) return;
+
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    if (localStorage.getItem('myd_banner_shown') === todayKey) return;
+
+    bannerCheckedRef.current = true;
+
+    fetchTodayPastEvents(
+      user.accessToken,
+      selectedCalendars.map(c => c.id),
+      today.getMonth() + 1,
+      today.getDate(),
+      today.getFullYear(),
+      yearCount - 1
+    ).then(results => {
+      if (results.length > 0) {
+        setTodayBannerData(results);
+        setShowTodayBanner(true);
+        localStorage.setItem('myd_banner_shown', todayKey);
+      }
+    }).catch(() => { });
+  }, [user, showWelcome, isProcessingLogin, isPremium, selectedCalendars]);
 
   const login = useGoogleLogin({
     scope: 'https://www.googleapis.com/auth/calendar profile email',
@@ -392,13 +425,13 @@ export default function App() {
                     style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '13px', color: '#333', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    ⚙️ 設定
+                    <Settings size={14} strokeWidth={1.8} style={{ flexShrink: 0 }} /> 設定
                   </button>
                   <button onClick={() => { setShowViewMenu(false); handleLogout(); }}
                     style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '13px', color: '#e74c3c', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#fff5f5'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    🚪 ログアウト
+                    <LogOut size={14} strokeWidth={1.8} style={{ flexShrink: 0 }} /> ログアウト
                   </button>
 
                   {/* DEV: FREE/PRO切り替え（リリース前に削除） */}
@@ -453,7 +486,7 @@ export default function App() {
 
         {/* 右：記念日ボタンのみ */}
         <button onClick={() => setShowAnniversary(true)} style={{ ...btnStyle(false), flexShrink: 0 }}>
-          🎖{!isMobile && ' 記念日'}
+          <Star size={14} strokeWidth={1.8} />{!isMobile && ' 記念日'}
         </button>
 
       </div>
@@ -568,11 +601,24 @@ export default function App() {
           }}
           onClose={() => setSelectedEvent(null)} />
       )}
+
+      {/* 今日の○年前バナー（PRO限定） */}
+      {showTodayBanner && (
+        <TodayInPastBanner
+          data={todayBannerData}
+          today={today}
+          theme={theme}
+          onClose={() => setShowTodayBanner(false)}
+        />
+      )}
+
       {
         tokenExpired && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             <div style={{ background: '#fff', borderRadius: '12px', padding: '28px 24px', width: '100%', maxWidth: '320px', textAlign: 'center', border: '0.5px solid #ddd' }}>
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏰</div>
+              <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+                <Clock size={32} strokeWidth={1.5} color="#888" />
+              </div>
               <div style={{ fontSize: '15px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>セッションが切れました</div>
               <div style={{ fontSize: '12px', color: '#888', marginBottom: '20px' }}>再度ログインしてください</div>
               <button onClick={handleLogout}

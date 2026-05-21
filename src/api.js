@@ -102,3 +102,24 @@ export async function updateCalendarEvent(accessToken, calendarId, eventId, titl
   if (!res.ok) throw new Error('イベントの更新に失敗しました');
   return await res.json();
 }
+
+// 今日の○年前：同じ月日の過去イベントを取得
+export async function fetchTodayPastEvents(accessToken, calendarIds, month, day, currentYear, maxYearsBack) {
+  const yearPromises = [];
+  for (let i = 1; i <= maxYearsBack; i++) {
+    const year = currentYear - i;
+    if (year < 2006) break;
+    yearPromises.push(
+      Promise.all(
+        calendarIds.map(calId =>
+          fetchCalendarEvents(accessToken, calId, year, month, day, null).catch(() => [])
+        )
+      ).then(results => {
+        const allEvents = results.flat();
+        return allEvents.length > 0 ? { year, events: allEvents } : null;
+      })
+    );
+  }
+  const results = await Promise.all(yearPromises);
+  return results.filter(Boolean);
+}

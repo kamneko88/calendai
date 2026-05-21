@@ -109,6 +109,27 @@ export default function SettingsPanel({
             </div>
           )}
 
+          {/* 起動時バナー（有料版のみ） */}
+          {isPremium && (
+            <div style={{ marginBottom: '22px' }}>
+              <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>今日の○年前</div>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.todayBanner !== false}
+                  onChange={e => onChange({ ...settings, todayBanner: e.target.checked })}
+                  style={{ width: '16px', height: '16px', marginTop: '1px', flexShrink: 0 }}
+                />
+                <div>
+                  <div style={{ fontSize: '13px', color: '#333' }}>起動時に過去の記録を表示する</div>
+                  <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>
+                    アプリを開いたとき、今日の過去の予定をお知らせします
+                  </div>
+                </div>
+              </label>
+            </div>
+          )}
+
           {/* テーマ */}
           <div style={{ marginBottom: '22px' }}>
             <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>テーマ</div>
@@ -126,7 +147,6 @@ export default function SettingsPanel({
           {/* 表示カレンダー（アコーディオン） */}
           {calendars.length > 0 && (
             <div style={{ marginBottom: '22px' }}>
-              {/* ヘッダー行 */}
               <button onClick={() => setOpenSection(o => o === 'cal' ? null : 'cal')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 10px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>表示カレンダー</span>
@@ -135,7 +155,6 @@ export default function SettingsPanel({
                 <span style={{ fontSize: '10px', color: '#aaa' }}>{openSection === 'cal' ? '▲' : '▼'}</span>
               </button>
 
-              {/* 選択中カレンダー：縦並びドラッグリスト */}
               {selectedCalendars.length === 0 ? (
                 <div style={{ fontSize: '11px', color: '#bbb', marginBottom: '8px' }}>未選択</div>
               ) : (
@@ -191,7 +210,6 @@ export default function SettingsPanel({
                 </>
               )}
 
-              {/* 展開リスト（追加・削除） */}
               {openSection === 'cal' && (
                 <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden', marginTop: '8px' }}>
                   {calendars.map((cal, i) => {

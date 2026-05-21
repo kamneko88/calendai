@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Lock } from 'lucide-react';
+
 export default function LockScreen({ onUnlock }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
@@ -23,7 +25,9 @@ export default function LockScreen({ onUnlock }) {
   return (
     <div style={{ minHeight: '100vh', background: '#f0ebe0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Hiragino Sans, Meiryo, sans-serif' }}>
       <div style={{ background: '#fdfaf5', borderRadius: '16px', padding: '40px 32px', width: '320px', border: '0.5px solid #ddd', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
-        <div style={{ fontSize: '26px', marginBottom: '8px' }}>🔒</div>
+        <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+          <Lock size={28} strokeWidth={1.5} color="#555" />
+        </div>
         <div style={{ fontSize: '15px', fontWeight: '500', color: '#333', marginBottom: '6px' }}>かれんだい</div>
         <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '28px' }}>PINを入力してください</div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>

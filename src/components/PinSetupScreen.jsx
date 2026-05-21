@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Lock } from 'lucide-react';
 
 export default function PinSetupScreen({ onComplete, onCancel }) {
   const [step, setStep] = useState(1);
@@ -33,7 +34,9 @@ export default function PinSetupScreen({ onComplete, onCancel }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
       <div style={{ background: '#fdfaf5', borderRadius: '16px', padding: '40px 32px', width: '320px', border: '0.5px solid #ddd', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
-        <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔐</div>
+        <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+          <Lock size={26} strokeWidth={1.5} color={step === 2 ? '#3B82F6' : '#555'} />
+        </div>
         <div style={{ fontSize: '15px', fontWeight: '500', color: '#333', marginBottom: '6px' }}>
           {step === 1 ? '新しいPINを入力' : 'もう一度入力して確認'}
         </div>
