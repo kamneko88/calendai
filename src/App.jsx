@@ -2,7 +2,7 @@ import DiaryModal from "./components/DiaryModal";
 import TodayInPastBanner from "./components/TodayInPastBanner";
 import { useState, useEffect, useRef } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
-import { THEMES, CAL_COLORS, FONTS } from "./constants";
+import { THEMES, CAL_COLORS, FONTS, APP_VERSION } from "./constants";
 import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents } from "./api";
 import { getInitials, useWindowWidth, useSwipe } from "./hooks";
 import LockScreen from "./components/LockScreen";
@@ -529,7 +529,7 @@ export default function App() {
 
       {/* フッター */}
       <div style={{ textAlign: 'center', padding: '12px', fontSize: '10px', color: theme.subColor, letterSpacing: '.1em' }}>
-        CalenDai v0.1.0
+        CalenDai v{APP_VERSION}
       </div>
 
       {/* モーダル類 */}
