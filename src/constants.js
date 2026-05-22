@@ -2,8 +2,8 @@
 // バージョン履歴
 // v0.1.0 (2026-05-16): 初期実装・ログイン画面・ウェルカム画面
 // v0.5.0 (2026-05-21): 今日の○年前バナー・Lucide Reactアイコン・VPS移行・アプリアイコン
-// ========================================
-export const APP_VERSION = '0.5.0';
+// v0.6.0 (2026-05-22): スプラッシュ画面・ログイン画面リデザイン・NIKKIバッジ・FREE年数開放
+export const APP_VERSION = '0.6.0';
 export const MONTHS_EN = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 export const WDS = ['日','月','火','水','木','金','土'];
 export const CAL_COLORS = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899'];
