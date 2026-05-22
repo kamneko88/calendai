@@ -5,6 +5,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { THEMES, CAL_COLORS, FONTS, APP_VERSION } from "./constants";
 import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents } from "./api";
 import { getInitials, useWindowWidth, useSwipe } from "./hooks";
+import SplashScreen from "./components/SplashScreen";
 import LockScreen from "./components/LockScreen";
 import PinSetupScreen from "./components/PinSetupScreen";
 import WelcomeScreen from "./components/WelcomeScreen";
@@ -33,9 +34,7 @@ export default function App() {
   const [settings, setSettings] = useState(loadSettings);
   const [dayCount, setDayCount] = useState(() => Math.min(loadSettings().defaultDayCount || 2, 2));
   const [yearCount, setYearCount] = useState(() => {
-    const saved = loadSettings().defaultYearCount || 3;
-    const premium = localStorage.getItem('myd_premium') === 'true';
-    return premium ? saved : Math.min(saved, 3);
+    return loadSettings().defaultYearCount || 3;
   });
   const [base, setBase] = useState(() => {
     const dc = loadSettings().defaultDayCount || 2;
@@ -72,11 +71,12 @@ export default function App() {
     () => localStorage.getItem('myd_anniversary_cal') || null
   );
   const [showTodayBanner, setShowTodayBanner] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [todayBannerData, setTodayBannerData] = useState([]);
   const bannerCheckedRef = useRef(false);
   const theme = THEMES[settings.theme] || THEMES.classic;
   const viewMenuRef = useRef(null);
-
+  
   useEffect(() => {
     if (isMobile && dayCount > 2) handleDayCountChange(2);
   }, [isMobile]);
@@ -194,6 +194,7 @@ export default function App() {
   });
 
   const handleLogout = () => {
+    setShowSplash(false);
     setUser(null); setCalendars([]); setSelectedCalendars([]); setTokenExpired(false);
     localStorage.removeItem('myd_user');
   };
@@ -311,9 +312,12 @@ export default function App() {
   const calName = (ev) => { const cal = selectedCalendars.find(c => c.id === ev.calendarId); return cal ? cal.name : ''; };
 
   // 画面の出し分け
-  if (!user) return isProcessingLogin
-    ? <div style={{ minHeight: '100vh', background: theme.bg }} />
-    : <LoginScreen onLogin={login} theme={theme} />;
+  if (!user) {
+    if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />;
+    return isProcessingLogin
+      ? <div style={{ minHeight: '100vh', background: '#9e6b50' }} />
+      : <LoginScreen onLogin={login} />;
+  }
   if (showWelcome) return (
     <WelcomeScreen
       years={welcomeYears} startYear={welcomeStartYear} isFirst={isFirstLogin}
@@ -362,9 +366,8 @@ export default function App() {
           {/* 統合タイトルメニュー */}
           <div ref={viewMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
             <div onClick={() => setShowViewMenu(o => !o)} style={{ cursor: 'pointer', userSelect: 'none' }}>
-              {!isMobile && <div style={{ fontSize: '9px', letterSpacing: '.15em', color: theme.monthColor, lineHeight: 1 }}>CalenDai</div>}
-              <div style={{ fontSize: isMobile ? '12px' : '15px', fontWeight: '600', color: theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
-                {user.name}さんの{yearCount}年日記 ▾
+              <div style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '700', color: theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                {user.name}さんのCalenDai ▾
               </div>
             </div>
 
@@ -380,9 +383,11 @@ export default function App() {
                     <div style={{ fontSize: '13px', fontWeight: '500', color: '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
                     <div style={{ fontSize: '11px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                   </div>
-                  <div style={{ fontSize: '8px', fontWeight: '700', padding: '2px 6px', borderRadius: '3px', flexShrink: 0, background: isPremium ? theme.currentYearColor : theme.subColor, color: '#fff', fontFamily: 'monospace' }}>
-                    {isPremium ? 'PRO' : 'FREE'}
-                  </div>
+                  {isPremium && (
+                    <div style={{ fontSize: '8px', fontWeight: '700', padding: '2px 6px', borderRadius: '3px', flexShrink: 0, background: theme.currentYearColor, color: '#fff', fontFamily: 'monospace' }}>
+                      NIKKI
+                    </div>
+                  )}
                 </div>
 
                 {/* 表示設定セクション */}
@@ -391,7 +396,7 @@ export default function App() {
                   <div style={{ marginBottom: '8px' }}>
                     <div style={{ fontSize: '11px', color: '#888', marginBottom: '5px' }}>年数</div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      {(isPremium ? [3, 5] : [3]).map(n => (
+                      {[3, 5].map(n => (
                         <button key={n} onClick={() => {
                           setYearCount(n);
                           setSettings(s => ({ ...s, defaultYearCount: n }));
@@ -461,7 +466,22 @@ export default function App() {
                     style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    🛠 DEV: {isPremium ? 'PRO → FREEに切替' : 'FREE → PROに切替'}
+                    🛠 DEV: {isPremium ? 'NIKKI → FREEに切替' : 'FREE → NIKKIに切替'}
+                  </button>
+                  <button onClick={() => {
+                    localStorage.removeItem('myd_welcomed');
+                    localStorage.removeItem('myd_skip_welcome');
+                    localStorage.removeItem('myd_banner_shown');
+                    localStorage.removeItem('myd_settings');
+                    localStorage.removeItem('myd_selected_calendars');
+                    localStorage.removeItem('myd_anniversary_cal');
+                    localStorage.removeItem('myd_pin');
+                    window.location.reload();
+                  }}
+                    style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    🛠 DEV: 初期化（初回起動状態に戻す）
                   </button>
                 </div>
               </div>
@@ -469,9 +489,11 @@ export default function App() {
           </div>
 
           {/* FREE/PROバッジ（ヘッダー常時表示・テスト確認用） */}
-          <div style={{ fontSize: '8px', fontWeight: '700', letterSpacing: '.05em', padding: '1px 5px', borderRadius: '3px', flexShrink: 0, background: isPremium ? theme.currentYearColor : theme.subColor, color: theme.pageBg, opacity: 0.85, fontFamily: 'monospace' }}>
-            {isPremium ? 'PRO' : 'FREE'}
-          </div>
+          {isPremium && (
+            <div style={{ fontSize: '8px', fontWeight: '700', letterSpacing: '.05em', padding: '1px 5px', borderRadius: '3px', flexShrink: 0, background: theme.currentYearColor, color: theme.pageBg, opacity: 0.85, fontFamily: 'monospace' }}>
+              NIKKI
+            </div>
+          )}
 
           {/* ナビゲーション */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>

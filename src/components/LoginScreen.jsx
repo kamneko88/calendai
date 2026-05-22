@@ -1,71 +1,67 @@
 import { useState, useEffect } from "react";
-import { THEMES } from "../constants";
 
-export default function LoginScreen({ onLogin, theme }) {
+export default function LoginScreen({ onLogin }) {
+  const [agreed, setAgreed] = useState(false);
   const [visible, setVisible] = useState(false);
+  const gBlue   = agreed ? "#4285F4" : "rgba(255,255,255,0.6)";
+  const gGreen  = agreed ? "#34A853" : "rgba(255,255,255,0.6)";
+  const gYellow = agreed ? "#FBBC05" : "rgba(255,255,255,0.6)";
+  const gRed    = agreed ? "#EA4335" : "rgba(255,255,255,0.6)";
+
   useEffect(() => { setTimeout(() => setVisible(true), 50); }, []);
-  const t = theme || THEMES.classic;
 
   return (
     <div style={{
-      minHeight: '100vh',
-      background: t.bg,
-      display: 'flex',
-      alignItems: 'flex-start',
-      paddingTop: '30vh',
-      justifyContent: 'center',
+      minHeight: '100vh', background: '#9e6b50',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
       fontFamily: 'Hiragino Sans, Meiryo, sans-serif',
-      opacity: visible ? 1 : 0,
-      transition: 'opacity 0.3s ease',
+      padding: '40px 32px',
+      opacity: visible ? 1 : 0, transition: 'opacity 0.5s ease',
     }}>
-      <div style={{ width: '260px', textAlign: 'center', padding: '0 24px' }}>
-        <div style={{
-          border: `1px solid ${t.dateColor}`,
-          padding: '24px 20px',
-          marginBottom: '28px',
+      <img src={`${import.meta.env.BASE_URL}icon-192.png`} alt="CalenDai"
+        style={{ width: '88px', height: '88px', borderRadius: '18px', marginBottom: '20px' }} />
+
+      <div style={{ fontSize: '22px', fontWeight: '600', color: '#fdfaf5', marginBottom: '40px', letterSpacing: '.02em' }}>
+        CalenDaiへようこそ
+      </div>
+
+      <button onClick={() => { if (agreed) onLogin(); }}
+        style={{
+          width: '100%', maxWidth: '280px', padding: '13px 20px',
+          background: agreed ? '#fff' : 'rgba(255,255,255,0.4)',
+          border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500',
+          color: agreed ? '#333' : 'rgba(255,255,255,0.7)',
+          cursor: agreed ? 'pointer' : 'default',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+          transition: 'all 0.2s', marginBottom: '14px',
         }}>
-          <div style={{
-            fontSize: '28px',
-            fontWeight: '300',
-            color: t.dateColor,
-            fontFamily: 'Hiragino Mincho ProN, Georgia, serif',
-            letterSpacing: '.1em',
-            lineHeight: 1.3,
-            marginBottom: '8px',
-          }}>かれんだい</div>
-          <div style={{
-            fontSize: '10px',
-            color: t.dateColor,
-            letterSpacing: '.2em',
-            textTransform: 'uppercase',
-          }}>Calendar Diary</div>
-        </div>
-        <button onClick={onLogin} style={{
-          width: '100%',
-          padding: '12px',
-          borderRadius: '6px',
-          border: 'none',
-          background: t.pageBg,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          fontSize: '12px',
-          color: t.monthColor,
-          letterSpacing: '.05em',
-          transition: 'opacity 0.2s',
-        }}
-          onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
-          onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-          <svg width="16" height="16" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-          </svg>
-          Googleでログイン
-        </button>
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <path fill={gBlue}   d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z" />
+          <path fill={gGreen}  d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z" />
+          <path fill={gYellow} d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z" />
+          <path fill={gRed}    d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.3z" />
+        </svg>
+        Googleでログイン
+      </button>
+
+      <div style={{ fontSize: '12px', color: 'rgba(253,250,245,0.75)', textAlign: 'left', lineHeight: 1.8, marginBottom: '48px', maxWidth: '280px' }}>
+        CalenDaiのご使用にはGoogleアカウントへのログインが必要です
+      </div>
+
+      <div style={{ maxWidth: '280px', width: '100%' }}>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
+            style={{ width: '14px', height: '14px', marginTop: '3px', flexShrink: 0, cursor: 'pointer' }} />
+          <div style={{ fontSize: '11px', color: 'rgba(253,250,245,0.85)', lineHeight: 1.8, textAlign: 'left' }}>
+            <a href="https://suneight-okayama.jp/privacy/calendai/"
+              target="_blank" rel="noopener noreferrer"
+              style={{ color: '#fdfaf5', textDecoration: 'underline' }}>
+              プライバシーポリシー
+            </a>
+            に同意してログインします。カレンダーデータはGoogleのサーバーとお使いのデバイス間で直接やり取りされます。CalenDaiのサーバーには保存されません。
+          </div>
+        </label>
       </div>
     </div>
   );
