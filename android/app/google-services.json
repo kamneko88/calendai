@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "690550080789",
+    "project_id": "calendai-android",
+    "storage_bucket": "calendai-android.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690550080789:android:e30424e5c021400aca951c",
+        "android_client_info": {
+          "package_name": "jp.kamneko88.calendai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "690550080789-h6rihv5f27m5988sn36eiqfnmhkthkg2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "jp.kamneko88.calendai",
+            "certificate_hash": "00ed7dc91c41361671790495eaae72f3ed63a281"
+          }
+        },
+        {
+          "client_id": "690550080789-5k4483a7a5phqvu72q2iv1jtk8e9qe00.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDt79jEcT3znyqt84qkdQuEVSPVCB2h9Go"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "690550080789-5k4483a7a5phqvu72q2iv1jtk8e9qe00.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

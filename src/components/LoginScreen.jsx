@@ -50,24 +50,26 @@ export default function LoginScreen({ onLogin }) {
       </div>
 
       <div style={{ maxWidth: '280px', width: '100%' }}>
-        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', cursor: 'pointer', marginBottom: '8px' }}>
           <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
-            style={{ width: '14px', height: '14px', marginTop: '3px', flexShrink: 0, cursor: 'pointer' }} />
+            style={{ width: '16px', height: '16px', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }} />
           <div style={{ fontSize: '11px', color: 'rgba(253,250,245,0.85)', lineHeight: 1.8, textAlign: 'left' }}>
-            <a href="https://suneight-okayama.jp/privacy/calendai/"
-              target="_blank" rel="noopener noreferrer"
-              style={{ color: '#fdfaf5', textDecoration: 'underline' }}>
-              プライバシーポリシー
-            </a>
-            ・
-            <a href="https://suneight-okayama.jp/terms/calendai/"
-              target="_blank" rel="noopener noreferrer"
-              style={{ color: '#fdfaf5', textDecoration: 'underline' }}>
-              利用規約
-            </a>
             に同意してログインします。カレンダーデータはGoogleのサーバーとお使いのデバイス間で直接やり取りされます。CalenDaiのサーバーには保存されません。
           </div>
         </label>
+        <div style={{ fontSize: '11px', color: 'rgba(253,250,245,0.85)', lineHeight: 1.8, textAlign: 'left', paddingLeft: '30px' }}>
+          <a href="https://suneight-okayama.jp/privacy/calendai/"
+            target="_blank" rel="noopener noreferrer"
+            style={{ color: '#fdfaf5', textDecoration: 'underline' }}>
+            プライバシーポリシー
+          </a>
+          ・
+          <a href="https://suneight-okayama.jp/terms/calendai/"
+            target="_blank" rel="noopener noreferrer"
+            style={{ color: '#fdfaf5', textDecoration: 'underline' }}>
+            利用規約
+          </a>
+        </div>
       </div>
     </div>
   );

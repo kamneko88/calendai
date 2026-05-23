@@ -4,4 +4,5 @@
     <string name="title_activity_main">CalenDai</string>
     <string name="package_name">jp.kamneko88.calendai</string>
     <string name="custom_url_scheme">jp.kamneko88.calendai</string>
+    <string name="server_client_id">690550080789-5k4483a7a5phqvu72q2iv1jtk8e9qe00.apps.googleusercontent.com</string>
 </resources>

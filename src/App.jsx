@@ -16,6 +16,8 @@ import SettingsPanel from "./components/SettingsPanel";
 import DayPage from "./components/DayPage";
 import AnniversaryTab from "./components/AnniversaryTab";
 import { Settings, LogOut, Star, Clock } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 
 export default function App() {
   const today = new Date();
@@ -193,6 +195,58 @@ export default function App() {
     onError: (err) => console.error('ログイン失敗:', err),
   });
 
+  const loginNative = async () => {
+    try {
+      await GoogleAuth.initialize({
+        clientId: '690550080789-5k4483a7a5phqvu72q2iv1jtk8e9qe00.apps.googleusercontent.com',
+        scopes: ['profile', 'email', 'https://www.googleapis.com/auth/calendar'],
+        grantOfflineAccess: false,
+      });
+      const googleUser = await GoogleAuth.signIn();
+      const accessToken = googleUser.authentication.accessToken;
+      setIsProcessingLogin(true);
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const profile = await res.json();
+
+      const userData = {
+        name: profile.name || googleUser.displayName,
+        email: profile.email || googleUser.email,
+        picture: profile.picture || googleUser.imageUrl,
+        accessToken,
+        initials: getInitials(profile.name || googleUser.displayName || ''),
+        color: '#3B82F6'
+      };
+
+      const cals = await fetchAllCalendars(accessToken);
+      const saved = localStorage.getItem('myd_selected_calendars');
+      const primary = cals.find(c => c.primary) || cals[0];
+      const newSelectedCals = saved ? JSON.parse(saved)
+        : primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
+
+      localStorage.setItem('myd_user', JSON.stringify(userData));
+      setUser(userData);
+      setCalendars(cals);
+      setSelectedCalendars(newSelectedCals);
+      setIsFirstLogin(!localStorage.getItem('myd_welcomed'));
+
+      const shouldShowWelcome = !localStorage.getItem('myd_skip_welcome');
+      if (shouldShowWelcome) {
+        const oldestYear = await fetchOldestEventYear(accessToken);
+        if (oldestYear) {
+          setWelcomeStartYear(oldestYear);
+          setWelcomeYears(today.getFullYear() - oldestYear + 1);
+        }
+      }
+      setShowWelcome(shouldShowWelcome);
+      setIsProcessingLogin(false);
+    } catch (e) {
+      console.error('Native login error:', e);
+      setIsProcessingLogin(false);
+    }
+  };
+
   const handleLogout = () => {
     setShowSplash(false);
     setUser(null); setCalendars([]); setSelectedCalendars([]); setTokenExpired(false);
@@ -316,7 +370,7 @@ export default function App() {
     if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />;
     return isProcessingLogin
       ? <div style={{ minHeight: '100vh', background: '#9e6b50' }} />
-      : <LoginScreen onLogin={login} />;
+      : <LoginScreen onLogin={Capacitor.isNativePlatform() ? loginNative : login} />;
   }
   if (showWelcome) return (
     <WelcomeScreen
