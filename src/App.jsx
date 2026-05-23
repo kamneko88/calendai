@@ -27,7 +27,7 @@ export default function App() {
       const saved = localStorage.getItem('myd_settings');
       if (saved) return JSON.parse(saved);
     } catch { }
-    return { stepNav: false, fontSize: 'small', defaultYearCount: 3, defaultDayCount: 2, theme: 'classic', fontFamily: 'gothic', todayBanner: true };
+    return { stepNav: false, fontSize: 'small', defaultYearCount: 5, defaultDayCount: 2, theme: 'classic', fontFamily: 'gothic', todayBanner: true };
   };
 
   const [user, setUser] = useState(null);
@@ -76,7 +76,7 @@ export default function App() {
   const bannerCheckedRef = useRef(false);
   const theme = THEMES[settings.theme] || THEMES.classic;
   const viewMenuRef = useRef(null);
-  
+
   useEffect(() => {
     if (isMobile && dayCount > 2) handleDayCountChange(2);
   }, [isMobile]);
@@ -354,163 +354,176 @@ export default function App() {
     </div>
   );
 
+  const navButtons = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+      <button onClick={() => navigate(-1)} style={btnStyle(false)}>◀</button>
+      <button onClick={goToday} style={btnStyle(false)}>今日</button>
+      <button onClick={() => navigate(1)} style={btnStyle(false)}>▶</button>
+    </div>
+  );
+
+  const anniversaryButton = (
+    <button onClick={() => setShowAnniversary(true)} style={{ ...btnStyle(false), flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <Star size={14} strokeWidth={1.8} />{!isMobile && ' 記念日'}
+    </button>
+  );
+
   return (
     <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: FONTS[settings.fontFamily || 'gothic']?.family || FONTS.gothic.family, padding: isMobile ? '8px' : '14px' }}>
 
       {/* ヘッダー */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', padding: isMobile ? '8px 10px' : '10px 14px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}`, gap: '8px' }}>
+      <div style={{ marginBottom: '10px', padding: isMobile ? '8px 10px' : '10px 14px', background: theme.headerBg, borderRadius: '8px', border: `0.5px solid ${theme.headerBorder}` }}>
 
-        {/* 左：統合メニュー＋バッジ＋ナビ */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
+        {/* 行1：タイトル＋バッジ（デスクトップはナビ・記念日も同じ行） */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: isMobile ? '8px' : 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
 
-          {/* 統合タイトルメニュー */}
-          <div ref={viewMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
-            <div onClick={() => setShowViewMenu(o => !o)} style={{ cursor: 'pointer', userSelect: 'none' }}>
-              <div style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '700', color: theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
-                {user.name}さんのCalenDai ▾
+            {/* 統合タイトルメニュー */}
+            <div ref={viewMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+              <div onClick={() => setShowViewMenu(o => !o)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                <div style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '700', color: theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                  {user.name}さんのCalenDai ▾
+                </div>
               </div>
+
+              {showViewMenu && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#fff', border: '0.5px solid #ddd', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.14)', zIndex: 1000, minWidth: '260px', overflow: 'hidden' }}>
+
+                  {/* アカウントセクション */}
+                  <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '0.5px solid #eee' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: user.color, color: '#fff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '500', overflow: 'hidden' }}>
+                      {user.picture ? <img src={user.picture} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user.initials}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                      <div style={{ fontSize: '11px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                    </div>
+                    {isPremium && (
+                      <div style={{ fontSize: '8px', fontWeight: '700', padding: '2px 6px', borderRadius: '3px', flexShrink: 0, background: theme.currentYearColor, color: '#fff', fontFamily: 'monospace' }}>
+                        NIKKI
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 表示設定セクション */}
+                  <div style={{ padding: '12px 16px', borderBottom: '0.5px solid #eee' }}>
+                    <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>表示設定</div>
+                    <div style={{ marginBottom: '8px' }}>
+                      <div style={{ fontSize: '11px', color: '#888', marginBottom: '5px' }}>年数</div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {[3, 5].map(n => (
+                          <button key={n} onClick={() => {
+                            setYearCount(n);
+                            setSettings(s => ({ ...s, defaultYearCount: n }));
+                            if (n === 5 && dayCount > 2) handleDayCountChange(2);
+                          }}
+                            style={{ padding: '4px 14px', border: `0.5px solid ${yearCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: yearCount === n ? theme.btnActiveBg : '#fff', color: yearCount === n ? theme.btnActiveColor : theme.btnColor }}>
+                            {n}年
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#888', marginBottom: '5px' }}>日数</div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {[1, 2].map(n => (
+                          <button key={n} onClick={() => {
+                            handleDayCountChange(n);
+                            setSettings(s => ({ ...s, defaultDayCount: n }));
+                          }}
+                            style={{ padding: '4px 14px', border: `0.5px solid ${dayCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: dayCount === n ? theme.btnActiveBg : '#fff', color: dayCount === n ? theme.btnActiveColor : theme.btnColor }}>
+                            {n}日
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 設定・ログアウト */}
+                  <div style={{ padding: '6px 8px' }}>
+                    <button onClick={() => { setShowViewMenu(false); setShowSettings(true); }}
+                      style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '13px', color: '#333', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <Settings size={14} strokeWidth={1.8} style={{ flexShrink: 0 }} /> 設定
+                    </button>
+                    <button onClick={() => { setShowViewMenu(false); handleLogout(); }}
+                      style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '13px', color: '#e74c3c', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#fff5f5'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <LogOut size={14} strokeWidth={1.8} style={{ flexShrink: 0 }} /> ログアウト
+                    </button>
+                    <div style={{ borderTop: '0.5px solid #eee', margin: '6px 0' }} />
+                    <button onClick={() => {
+                      const next = !isPremium;
+                      setIsPremium(next);
+                      if (next) {
+                        handleUpgrade();
+                      } else {
+                        localStorage.removeItem('myd_premium');
+                        if (yearCount > 3) { setYearCount(3); setSettings(s => ({ ...s, defaultYearCount: 3 })); }
+                        if (selectedCalendars.length > 2) {
+                          const reduced = selectedCalendars.slice(0, 2);
+                          setSelectedCalendars(reduced);
+                          localStorage.setItem('myd_selected_calendars', JSON.stringify(reduced));
+                        }
+                        setSettings(s => ({ ...s, fontFamily: 'gothic' }));
+                        setDowngradeNotice(true);
+                        setTimeout(() => setDowngradeNotice(false), 4000);
+                      }
+                      setShowViewMenu(false);
+                    }}
+                      style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      🛠 DEV: {isPremium ? 'NIKKI → 通常版に切替' : '通常版 → NIKKIに切替'}
+                    </button>
+                    <button onClick={() => {
+                      localStorage.removeItem('myd_welcomed');
+                      localStorage.removeItem('myd_skip_welcome');
+                      localStorage.removeItem('myd_banner_shown');
+                      localStorage.removeItem('myd_settings');
+                      localStorage.removeItem('myd_selected_calendars');
+                      localStorage.removeItem('myd_anniversary_cal');
+                      localStorage.removeItem('myd_pin');
+                      window.location.reload();
+                    }}
+                      style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      🛠 DEV: 初期化（初回起動状態に戻す）
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {showViewMenu && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#fff', border: '0.5px solid #ddd', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.14)', zIndex: 1000, minWidth: '260px', overflow: 'hidden' }}>
-
-                {/* アカウントセクション */}
-                <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '0.5px solid #eee' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: user.color, color: '#fff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '500', overflow: 'hidden' }}>
-                    {user.picture ? <img src={user.picture} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user.initials}
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: '500', color: '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
-                    <div style={{ fontSize: '11px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
-                  </div>
-                  {isPremium && (
-                    <div style={{ fontSize: '8px', fontWeight: '700', padding: '2px 6px', borderRadius: '3px', flexShrink: 0, background: theme.currentYearColor, color: '#fff', fontFamily: 'monospace' }}>
-                      NIKKI
-                    </div>
-                  )}
-                </div>
-
-                {/* 表示設定セクション */}
-                <div style={{ padding: '12px 16px', borderBottom: '0.5px solid #eee' }}>
-                  <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>表示設定</div>
-                  <div style={{ marginBottom: '8px' }}>
-                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '5px' }}>年数</div>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      {[3, 5].map(n => (
-                        <button key={n} onClick={() => {
-                          setYearCount(n);
-                          setSettings(s => ({ ...s, defaultYearCount: n }));
-                          if (n === 5 && dayCount > 2) handleDayCountChange(2);
-                        }}
-                          style={{ padding: '4px 14px', border: `0.5px solid ${yearCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: yearCount === n ? theme.btnActiveBg : '#fff', color: yearCount === n ? theme.btnActiveColor : theme.btnColor }}>
-                          {n}年
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '5px' }}>日数</div>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      {[1, 2].map(n => (
-                        <button key={n} onClick={() => {
-                          handleDayCountChange(n);
-                          setSettings(s => ({ ...s, defaultDayCount: n }));
-                        }}
-                          style={{ padding: '4px 14px', border: `0.5px solid ${dayCount === n ? theme.btnActiveBg : theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', fontSize: '13px', background: dayCount === n ? theme.btnActiveBg : '#fff', color: dayCount === n ? theme.btnActiveColor : theme.btnColor }}>
-                          {n}日
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 設定・ログアウト */}
-                <div style={{ padding: '6px 8px' }}>
-                  <button onClick={() => { setShowViewMenu(false); setShowSettings(true); }}
-                    style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '13px', color: '#333', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <Settings size={14} strokeWidth={1.8} style={{ flexShrink: 0 }} /> 設定
-                  </button>
-                  <button onClick={() => { setShowViewMenu(false); handleLogout(); }}
-                    style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '13px', color: '#e74c3c', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#fff5f5'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <LogOut size={14} strokeWidth={1.8} style={{ flexShrink: 0 }} /> ログアウト
-                  </button>
-
-                  {/* DEV: FREE/PRO切り替え（リリース前に削除） */}
-                  <div style={{ borderTop: '0.5px solid #eee', margin: '6px 0' }} />
-                  <button onClick={() => {
-                    const next = !isPremium;
-                    setIsPremium(next);
-                    if (next) {
-                      handleUpgrade();
-                    } else {
-                      localStorage.removeItem('myd_premium');
-                      if (yearCount > 3) {
-                        setYearCount(3);
-                        setSettings(s => ({ ...s, defaultYearCount: 3 }));
-                      }
-                      if (selectedCalendars.length > 2) {
-                        const reduced = selectedCalendars.slice(0, 2);
-                        setSelectedCalendars(reduced);
-                        localStorage.setItem('myd_selected_calendars', JSON.stringify(reduced));
-                      }
-                      setSettings(s => ({ ...s, fontFamily: 'gothic' }));
-                      setDowngradeNotice(true);
-                      setTimeout(() => setDowngradeNotice(false), 4000);
-                    }
-                    setShowViewMenu(false);
-                  }}
-                    style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    🛠 DEV: {isPremium ? 'NIKKI → FREEに切替' : 'FREE → NIKKIに切替'}
-                  </button>
-                  <button onClick={() => {
-                    localStorage.removeItem('myd_welcomed');
-                    localStorage.removeItem('myd_skip_welcome');
-                    localStorage.removeItem('myd_banner_shown');
-                    localStorage.removeItem('myd_settings');
-                    localStorage.removeItem('myd_selected_calendars');
-                    localStorage.removeItem('myd_anniversary_cal');
-                    localStorage.removeItem('myd_pin');
-                    window.location.reload();
-                  }}
-                    style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    🛠 DEV: 初期化（初回起動状態に戻す）
-                  </button>
-                </div>
+            {/* NIKKIバッジ */}
+            {isPremium && (
+              <div style={{ fontSize: '8px', fontWeight: '700', letterSpacing: '.05em', padding: '1px 5px', borderRadius: '3px', flexShrink: 0, background: theme.currentYearColor, color: theme.pageBg, opacity: 0.85, fontFamily: 'monospace' }}>
+                NIKKI
               </div>
             )}
+
+            {/* デスクトップのみ：ナビ */}
+            {!isMobile && navButtons}
+
+            {/* デスクトップのみ：ジャンプ行 */}
+            {!isMobile && jumpRow}
           </div>
 
-          {/* FREE/PROバッジ（ヘッダー常時表示・テスト確認用） */}
-          {isPremium && (
-            <div style={{ fontSize: '8px', fontWeight: '700', letterSpacing: '.05em', padding: '1px 5px', borderRadius: '3px', flexShrink: 0, background: theme.currentYearColor, color: theme.pageBg, opacity: 0.85, fontFamily: 'monospace' }}>
-              NIKKI
-            </div>
-          )}
-
-          {/* ナビゲーション */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <button onClick={() => navigate(-1)} style={btnStyle(false)}>◀</button>
-            <button onClick={goToday} style={btnStyle(false)}>今日</button>
-            <button onClick={() => navigate(1)} style={btnStyle(false)}>▶</button>
-          </div>
-
-          {/* PC用ジャンプ行 */}
-          {!isMobile && jumpRow}
+          {/* デスクトップのみ：記念日ボタン */}
+          {!isMobile && anniversaryButton}
         </div>
 
-        {/* 右：記念日ボタンのみ */}
-        <button onClick={() => setShowAnniversary(true)} style={{ ...btnStyle(false), flexShrink: 0 }}>
-          <Star size={14} strokeWidth={1.8} />{!isMobile && ' 記念日'}
-        </button>
-
+        {/* 行2（モバイルのみ）：ナビ＋記念日 */}
+        {isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {navButtons}
+            <div style={{ flex: 1 }} />
+            {anniversaryButton}
+          </div>
+        )}
       </div>
 
       {/* スマホ用ジャンプ行 */}
@@ -539,13 +552,13 @@ export default function App() {
       {/* ダウングレード通知トースト */}
       {downgradeNotice && (
         <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#333', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-          FREE版では表示カレンダーは2つまでです。
+          通常版では表示カレンダーは2つまでです。
         </div>
       )}
 
       {upgradeNotice && (
         <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#2ecc71', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', textAlign: 'center' }}>
-          🎉 PROになりました！全機能が使えます。
+          🎉 NIKKI版になりました！全機能が使えます。
         </div>
       )}
 

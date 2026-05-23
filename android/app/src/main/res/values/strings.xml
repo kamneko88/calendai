@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CalenDai</string>
+    <string name="title_activity_main">CalenDai</string>
+    <string name="package_name">jp.kamneko88.calendai</string>
+    <string name="custom_url_scheme">jp.kamneko88.calendai</string>
+</resources>

@@ -32,8 +32,8 @@ export default function WelcomeScreen({ years, startYear, isFirst, skipWelcome, 
           {isFirst && startYear && (
             <div style={{ marginTop: '24px', fontSize: '12px', color: t.subColor, lineHeight: 2, letterSpacing: '.05em' }}>
               <div>{startYear}年から始まった</div>
-              <div>あなたのカレンダーが</div>
-              <div>かれんだいになりました</div>
+              <div>あなたのカレンダーを</div>
+              <div>かれんだいで表示します</div>
             </div>
           )}
         </div>
