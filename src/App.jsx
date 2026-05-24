@@ -3,7 +3,7 @@ import TodayInPastBanner from "./components/TodayInPastBanner";
 import { useState, useEffect, useRef } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { THEMES, CAL_COLORS, FONTS, APP_VERSION } from "./constants";
-import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents } from "./api";
+import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents, fetchAnniversaryToday } from "./api";
 import { getInitials, useWindowWidth, useSwipe } from "./hooks";
 import SplashScreen from "./components/SplashScreen";
 import LockScreen from "./components/LockScreen";
@@ -132,16 +132,25 @@ export default function App() {
 
     bannerCheckedRef.current = true;
 
-    fetchTodayPastEvents(
-      user.accessToken,
-      selectedCalendars.map(c => c.id),
-      today.getMonth() + 1,
-      today.getDate(),
-      today.getFullYear(),
-      yearCount - 1
-    ).then(results => {
-      if (results.length > 0) {
-        setTodayBannerData(results);
+    Promise.all([
+      fetchTodayPastEvents(
+        user.accessToken,
+        selectedCalendars.map(c => c.id),
+        today.getMonth() + 1,
+        today.getDate(),
+        today.getFullYear(),
+        yearCount - 1
+      ),
+      fetchAnniversaryToday(
+        user.accessToken,
+        anniversaryCalendarId,
+        today.getMonth() + 1,
+        today.getDate(),
+        today.getFullYear()
+      ),
+    ]).then(([pastEvents, anniversaries]) => {
+      if (pastEvents.length > 0 || anniversaries.length > 0) {
+        setTodayBannerData({ pastEvents, anniversaries });
         setShowTodayBanner(true);
         localStorage.setItem('myd_banner_shown', todayKey);
       }
@@ -366,12 +375,9 @@ export default function App() {
   const calName = (ev) => { const cal = selectedCalendars.find(c => c.id === ev.calendarId); return cal ? cal.name : ''; };
 
   // 画面の出し分け
-  if (!user) {
-    if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />;
-    return isProcessingLogin
-      ? <div style={{ minHeight: '100vh', background: '#9e6b50' }} />
-      : <LoginScreen onLogin={Capacitor.isNativePlatform() ? loginNative : login} />;
-  }
+  if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  if (isProcessingLogin) return <div style={{ minHeight: '100vh', background: '#9e6b50' }} />;
+  if (!user) return <LoginScreen onLogin={Capacitor.isNativePlatform() ? loginNative : login} />;
   if (showWelcome) return (
     <WelcomeScreen
       years={welcomeYears} startYear={welcomeStartYear} isFirst={isFirstLogin}

@@ -123,3 +123,41 @@ export async function fetchTodayPastEvents(accessToken, calendarIds, month, day,
   const results = await Promise.all(yearPromises);
   return results.filter(Boolean);
 }
+
+// 記念日カレンダーから今日の記念日を取得
+export async function fetchAnniversaryToday(accessToken, anniversaryCalendarId, month, day, currentYear) {
+  if (!anniversaryCalendarId) return [];
+  try {
+    const timeMin = new Date(currentYear, month - 1, day, 0, 0, 0).toISOString();
+    const timeMax = new Date(currentYear, month - 1, day, 23, 59, 59).toISOString();
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(anniversaryCalendarId)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const events = data.items || [];
+
+    const results = await Promise.all(events.map(async (ev) => {
+      let startYear = currentYear;
+      if (ev.recurringEventId) {
+        try {
+          const masterRes = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(anniversaryCalendarId)}/events/${encodeURIComponent(ev.recurringEventId)}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+          if (masterRes.ok) {
+            const master = await masterRes.json();
+            const startDate = master.start?.date || master.start?.dateTime;
+            if (startDate) startYear = new Date(startDate).getFullYear();
+          }
+        } catch {}
+      }
+      const years = currentYear - startYear;
+      if (years <= 0) return null;
+      return { title: ev.summary || '記念日', startYear, years };
+    }));
+
+    return results.filter(Boolean);
+  } catch {
+    return [];
+  }
+}

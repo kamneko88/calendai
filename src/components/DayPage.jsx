@@ -8,6 +8,9 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
   const dy = date.getDate();
   const wd = date.getDay();
   const isWe = wd === 0 || wd === 6;
+  const isSat = wd === 6;
+  const dayColor = isSat ? theme.saturdayColor : isWe ? theme.weekendColor : theme.dateColor;
+  const daySubColor = isSat ? theme.saturdayColor : isWe ? theme.weekendColor : theme.subColor;
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
   const fs = FS[fontSize];
@@ -19,7 +22,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
   const [diaryModal, setDiaryModal] = useState({ show: false, year: null });
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const MONTHS_EN = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
   useEffect(() => {
     if (!accessToken || selectedCalendars.length === 0) return;
@@ -58,8 +61,8 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
       <div style={{ paddingBottom: '8px', borderBottom: `1.5px solid ${theme.pageHeaderBorder}` }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: isMobile ? '32px' : '40px' }}>
-            <div style={{ fontSize: `${isMobile ? fs.date * 1.4 : fs.date * 1.6}px`, fontWeight: '300', color: isWe ? theme.weekendColor : theme.dateColor, fontFamily: 'Georgia, serif', lineHeight: 1 }}>{dy}</div>
-            <div style={{ fontSize: '9px', color: isWe ? theme.weekendColor : theme.subColor, marginTop: '2px', whiteSpace: 'nowrap' }}>{WDS[wd]}曜日</div>
+            <div style={{ fontSize: `${isMobile ? fs.date * 1.4 : fs.date * 1.6}px`, fontWeight: '300', color: dayColor, fontFamily: 'Georgia, serif', lineHeight: 1 }}>{dy}</div>
+            <div style={{ fontSize: '9px', color: daySubColor, marginTop: '2px', whiteSpace: 'nowrap' }}>{WDS[wd]}曜日</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', minWidth: isMobile ? '44px' : '52px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
