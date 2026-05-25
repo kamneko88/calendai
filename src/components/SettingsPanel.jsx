@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { CAL_COLORS, THEMES, FONTS } from "../constants";
+import AboutPanel from "./AboutPanel";
 
 export default function SettingsPanel({
   settings, onChange, onClose,
@@ -7,8 +8,10 @@ export default function SettingsPanel({
   onCalendarReorder,
   onPinSetup, isPremium,
   anniversaryCalendarId, onAnniversaryCalendarChange,
+  theme,
 }) {
   const [openSection, setOpenSection] = useState(null);
+  const [showAbout, setShowAbout] = useState(false);
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const longPressTimer = useRef(null);
@@ -291,10 +294,16 @@ export default function SettingsPanel({
           )}
 
         </div>
-        <div style={{ padding: '10px 18px 14px', textAlign: 'right' }}>
+        <div style={{ padding: '10px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button onClick={() => setShowAbout(true)} style={{ padding: '7px 16px', background: 'none', color: '#888', border: '0.5px solid #ddd', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+            このアプリについて
+          </button>
           <button onClick={onClose} style={{ padding: '7px 22px', background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>閉じる</button>
         </div>
       </div>
+      {showAbout && (
+        <AboutPanel theme={theme} onClose={() => setShowAbout(false)} />
+      )}
     </div>
   );
 }

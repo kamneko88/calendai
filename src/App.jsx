@@ -259,6 +259,7 @@ export default function App() {
   const handleLogout = () => {
     setShowSplash(false);
     setUser(null); setCalendars([]); setSelectedCalendars([]); setTokenExpired(false);
+    setIsLocked(false);
     localStorage.removeItem('myd_user');
   };
 
@@ -387,7 +388,7 @@ export default function App() {
       theme={theme}
     />
   );
-  if (isLocked) return <LockScreen onUnlock={() => setIsLocked(false)} />;
+  // if (isLocked) return <LockScreen onUnlock={() => setIsLocked(false)} />;
 
   const jumpRow = (
     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexWrap: 'wrap' }}>
@@ -658,7 +659,8 @@ export default function App() {
               setAnniversaryCalendarId(id);
               if (id) localStorage.setItem('myd_anniversary_cal', id);
               else localStorage.removeItem('myd_anniversary_cal');
-            }} />
+            }}
+            theme={theme} />
         )
       }
 

@@ -70,7 +70,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
               <span style={{ fontSize: '8px', color: theme.monthColor, letterSpacing: '.1em' }}>{MONTHS_EN[mo].slice(0, 3)}</span>
             </div>
             {isToday && (
-              <span style={{ fontSize: '8px', background: theme.pageHeaderBorder, color: theme.pageBg, borderRadius: '3px', padding: '0 4px', lineHeight: 1.8, marginTop: '2px', whiteSpace: 'nowrap' }}>TODAY</span>
+              <span style={{ fontSize: '8px', background: theme.todayBadgeBg, color: theme.todayBadgeColor, borderRadius: '3px', padding: '0 4px', lineHeight: 1.8, marginTop: '2px', whiteSpace: 'nowrap' }}>TODAY</span>
             )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', flex: 1, minWidth: 0 }}>
