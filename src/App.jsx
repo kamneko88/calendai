@@ -78,6 +78,7 @@ export default function App() {
   const bannerCheckedRef = useRef(false);
   const theme = THEMES[settings.theme] || THEMES.classic;
   const viewMenuRef = useRef(null);
+  const [pinSetupSuccess, setPinSetupSuccess] = useState(false);
 
   useEffect(() => {
     if (isMobile && dayCount > 2) handleDayCountChange(2);
@@ -388,7 +389,16 @@ export default function App() {
       theme={theme}
     />
   );
-  // if (isLocked) return <LockScreen onUnlock={() => setIsLocked(false)} />;
+  if (isLocked) return <LockScreen
+    onUnlock={() => setIsLocked(false)}
+    onReset={() => {
+      localStorage.removeItem('myd_pin');
+      localStorage.removeItem('myd_settings');
+      localStorage.removeItem('myd_user');
+      setIsLocked(false);
+      setUser(null);
+    }}
+  />;
 
   const jumpRow = (
     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexWrap: 'wrap' }}>
@@ -623,6 +633,12 @@ export default function App() {
         </div>
       )}
 
+      {pinSetupSuccess && (
+        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#333', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          🔒 PINコードを有効にしました
+        </div>
+      )}
+
       {/* フッター */}
       <div style={{ textAlign: 'center', padding: '12px', fontSize: '10px', color: theme.subColor, letterSpacing: '.1em' }}>
         CalenDai v{APP_VERSION}
@@ -676,11 +692,13 @@ export default function App() {
           theme={theme} />
       )}
 
-      {
-        showPinSetup && (
-          <PinSetupScreen onComplete={() => { setShowPinSetup(false); setIsLocked(true); }} onCancel={() => setShowPinSetup(false)} />
-        )
-      }
+      {showPinSetup && (
+        <PinSetupScreen onComplete={() => {
+          setShowPinSetup(false);
+          setPinSetupSuccess(true);
+          setTimeout(() => setPinSetupSuccess(false), 3000);
+        }} onCancel={() => setShowPinSetup(false)} />
+      )}
       {selectedEvent && (
         <EventModal
           event={selectedEvent}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Lock } from 'lucide-react';
 
-export default function LockScreen({ onUnlock }) {
+export default function LockScreen({ onUnlock, onReset }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
 
@@ -28,7 +28,7 @@ export default function LockScreen({ onUnlock }) {
         <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
           <Lock size={28} strokeWidth={1.5} color="#555" />
         </div>
-        <div style={{ fontSize: '15px', fontWeight: '500', color: '#333', marginBottom: '6px' }}>かれんだい</div>
+        <div style={{ fontSize: '15px', fontWeight: '500', color: '#333', marginBottom: '6px' }}>かれんだい CalnenDai</div>
         <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '28px' }}>PINを入力してください</div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
           {[0, 1, 2, 3].map(i => (
@@ -62,6 +62,11 @@ export default function LockScreen({ onUnlock }) {
           </button>
         </div>
         {error && <div style={{ marginTop: '16px', fontSize: '12px', color: '#e74c3c' }}>PINが違います</div>}
+        <button
+          onClick={() => onReset()}
+          style={{ marginTop: '24px', fontSize: '11px', color: '#bbb', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+          PINを忘れた場合
+        </button>
       </div>
     </div>
   );
