@@ -1,4 +1,7 @@
+import { useModalAnimation } from '../hooks';
+
 export default function TodayInPastBanner({ data, today, theme, onClose }) {
+  const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const currentYear = today.getFullYear();
   const month = today.getMonth() + 1;
   const day = today.getDate();
@@ -8,13 +11,14 @@ export default function TodayInPastBanner({ data, today, theme, onClose }) {
 
   return (
     <div
-      onClick={onClose}
+      onClick={close}
       style={{
         position: 'fixed', inset: 0,
         background: 'rgba(0,0,0,0.45)',
         zIndex: 3000,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '20px',
+        ...overlayAnim,
       }}
     >
       <div
@@ -29,6 +33,7 @@ export default function TodayInPastBanner({ data, today, theme, onClose }) {
           overflowY: 'auto',
           boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
           border: `0.5px solid ${theme.pageBorder}`,
+          ...contentAnim,
         }}
       >
         {/* ヘッダー */}
@@ -123,7 +128,7 @@ export default function TodayInPastBanner({ data, today, theme, onClose }) {
 
         {/* 閉じるボタン */}
         <button
-          onClick={onClose}
+          onClick={close}
           style={{
             width: '100%', marginTop: '18px',
             padding: '11px',

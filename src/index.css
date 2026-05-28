@@ -109,3 +109,37 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* CalenDai animations */
+@keyframes calOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes calOverlayOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes calModalIn {
+  from { opacity: 0; transform: scale(0.93); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes calModalOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.93); }
+}
+@keyframes calCenterToastIn {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 12px)); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+@keyframes calBottomToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes calDropdownIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes calFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

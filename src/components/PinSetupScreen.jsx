@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Lock } from 'lucide-react';
+import { useModalAnimation } from "../hooks";
 
 export default function PinSetupScreen({ onComplete, onCancel }) {
+  const { close, overlayAnim, contentAnim } = useModalAnimation(onCancel);
   const [step, setStep] = useState(1);
   const [firstPin, setFirstPin] = useState('');
   const [pin, setPin] = useState('');
@@ -18,8 +20,13 @@ export default function PinSetupScreen({ onComplete, onCancel }) {
         setPin('');
       } else {
         if (newPin === firstPin) {
-          localStorage.setItem('myd_pin', newPin);
-          onComplete();
+          const existingPin = localStorage.getItem('myd_pin');
+          if (existingPin && existingPin === newPin) {
+            onComplete('same');
+          } else {
+            localStorage.setItem('myd_pin', newPin);
+            onComplete(existingPin ? 'changed' : 'new');
+          }
         } else {
           setError(true);
           setTimeout(() => { setPin(''); setError(false); setStep(1); setFirstPin(''); }, 800);
@@ -31,9 +38,9 @@ export default function PinSetupScreen({ onComplete, onCancel }) {
   const handleDelete = () => setPin(p => p.slice(0, -1));
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-      onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div style={{ background: '#fdfaf5', borderRadius: '16px', padding: '40px 32px', width: '320px', border: '0.5px solid #ddd', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', ...overlayAnim }}
+      onClick={e => { if (e.target === e.currentTarget) close(); }}>
+      <div style={{ background: '#fdfaf5', borderRadius: '16px', padding: '40px 32px', width: '320px', border: '0.5px solid #ddd', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', ...contentAnim }}>
         <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
           <Lock size={26} strokeWidth={1.5} color={step === 2 ? '#3B82F6' : '#555'} />
         </div>
@@ -60,10 +67,7 @@ export default function PinSetupScreen({ onComplete, onCancel }) {
               {n}
             </button>
           ))}
-          <button onClick={onCancel}
-            style={{ padding: '16px', fontSize: '11px', border: '0.5px solid #ddd', borderRadius: '10px', cursor: 'pointer', background: '#fff', color: '#aaa' }}>
-            キャンセル
-          </button>
+          <div />
           <button onClick={() => handleInput('0')}
             style={{ padding: '16px', fontSize: '18px', border: '0.5px solid #ddd', borderRadius: '10px', cursor: 'pointer', background: '#fff', color: '#333' }}
             onMouseDown={e => e.currentTarget.style.background = '#f0f0f0'}
@@ -75,6 +79,10 @@ export default function PinSetupScreen({ onComplete, onCancel }) {
             ⌫
           </button>
         </div>
+        <button onClick={close}
+          style={{ display: 'block', width: '100%', maxWidth: '220px', margin: '10px auto 0', padding: '12px', fontSize: '13px', border: '0.5px solid #ddd', borderRadius: '10px', cursor: 'pointer', background: '#fff', color: '#aaa' }}>
+          キャンセル
+        </button>
         {error && <div style={{ marginTop: '16px', fontSize: '12px', color: '#e74c3c' }}>PINが一致しません。最初からやり直してください</div>}
       </div>
     </div>

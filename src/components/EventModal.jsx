@@ -1,15 +1,17 @@
 import { Calendar, Clock, Pencil } from 'lucide-react';
 import { WDS } from "../constants";
+import { useModalAnimation } from "../hooks";
 
 export default function EventModal({ event, calendarName, onClose, onEdit, isPremium }) {
+  const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   if (!event) return null;
   const d = new Date(event.year, event.month - 1, event.day);
   const dateStr = `${event.year}年${event.month}月${event.day}日（${WDS[d.getDay()]}）`;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: '#fdfaf5', borderRadius: '12px', width: '100%', maxWidth: '340px', border: '0.5px solid #ddd', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', ...overlayAnim }}
+      onClick={e => { if (e.target === e.currentTarget) close(); }}>
+      <div style={{ background: '#fdfaf5', borderRadius: '12px', width: '100%', maxWidth: '340px', border: '0.5px solid #ddd', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', ...contentAnim }}>
         <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '13px', fontWeight: '500', color: '#555' }}>予定の詳細</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -19,7 +21,7 @@ export default function EventModal({ event, calendarName, onClose, onEdit, isPre
                 <Pencil size={12} strokeWidth={1.8} /> 編集
               </button>
             )}
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#aaa', lineHeight: 1 }}>×</button>
+            <button onClick={close} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#aaa', lineHeight: 1 }}>×</button>
           </div>
         </div>
         <div style={{ padding: '20px 16px' }}>

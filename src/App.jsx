@@ -78,7 +78,10 @@ export default function App() {
   const bannerCheckedRef = useRef(false);
   const theme = THEMES[settings.theme] || THEMES.classic;
   const viewMenuRef = useRef(null);
-  const [pinSetupSuccess, setPinSetupSuccess] = useState(false);
+  const [pinToastType, setPinToastType] = useState(null);
+  const [pinClearSuccess, setPinClearSuccess] = useState(false);
+  const [isSilentRelogging, setIsSilentRelogging] = useState(false);
+  const [showTokenExpiredDialog, setShowTokenExpiredDialog] = useState(false);
 
   useEffect(() => {
     if (isMobile && dayCount > 2) handleDayCountChange(2);
@@ -204,6 +207,53 @@ export default function App() {
     },
     onError: (err) => console.error('ログイン失敗:', err),
   });
+
+  const silentLogin = useGoogleLogin({
+    scope: 'https://www.googleapis.com/auth/calendar profile email',
+    prompt: 'none',
+    onSuccess: async (tokenResponse) => {
+      const savedUser = JSON.parse(localStorage.getItem('myd_user') || '{}');
+      const updatedUser = { ...savedUser, accessToken: tokenResponse.access_token };
+      localStorage.setItem('myd_user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      setTokenExpired(false);
+      setIsSilentRelogging(false);
+    },
+    onError: () => {
+      setIsSilentRelogging(false);
+      setShowTokenExpiredDialog(true);
+    },
+  });
+
+  const handleTokenExpired = () => {
+    if (isSilentRelogging) return;
+    setTokenExpired(true);
+    setIsSilentRelogging(true);
+    if (Capacitor.isNativePlatform()) {
+      (async () => {
+        try {
+          await GoogleAuth.initialize({
+            clientId: '690550080789-5k4483a7a5phqvu72q2iv1jtk8e9qe00.apps.googleusercontent.com',
+            scopes: ['profile', 'email', 'https://www.googleapis.com/auth/calendar'],
+            grantOfflineAccess: false,
+          });
+          const googleUser = await GoogleAuth.signIn();
+          const accessToken = googleUser.authentication.accessToken;
+          const savedUser = JSON.parse(localStorage.getItem('myd_user') || '{}');
+          const updatedUser = { ...savedUser, accessToken };
+          localStorage.setItem('myd_user', JSON.stringify(updatedUser));
+          setUser(updatedUser);
+          setTokenExpired(false);
+          setIsSilentRelogging(false);
+        } catch {
+          setIsSilentRelogging(false);
+          setShowTokenExpiredDialog(true);
+        }
+      })();
+    } else {
+      silentLogin();
+    }
+  };
 
   const loginNative = async () => {
     try {
@@ -397,6 +447,7 @@ export default function App() {
       localStorage.removeItem('myd_user');
       setIsLocked(false);
       setUser(null);
+      setSettings(loadSettings());
     }}
   />;
 
@@ -458,7 +509,7 @@ export default function App() {
               </div>
 
               {showViewMenu && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#fff', border: '0.5px solid #ddd', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.14)', zIndex: 1000, minWidth: '260px', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#fff', border: '0.5px solid #ddd', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.14)', zIndex: 1000, minWidth: '260px', overflow: 'hidden', animation: 'calDropdownIn 0.18s ease forwards' }}>
 
                   {/* アカウントセクション */}
                   <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '0.5px solid #eee' }}>
@@ -615,27 +666,29 @@ export default function App() {
             anniversaryCalendarId={anniversaryCalendarId}
             isPremium={isPremium}
             isMobile={isMobile} onEventClick={setSelectedEvent}
-            onTokenExpired={() => setTokenExpired(true)}
+            onTokenExpired={handleTokenExpired}
             theme={theme} />
         ))}
       </div>
 
       {/* ダウングレード通知トースト */}
       {downgradeNotice && (
-        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#333', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#333', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', animation: 'calBottomToastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
           通常版では表示カレンダーは2つまでです。
         </div>
       )}
 
       {upgradeNotice && (
-        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#2ecc71', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', textAlign: 'center' }}>
+        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#2ecc71', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', textAlign: 'center', animation: 'calBottomToastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
           🎉 NIKKI版になりました！全機能が使えます。
         </div>
       )}
 
-      {pinSetupSuccess && (
-        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#333', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-          🔒 PINコードを有効にしました
+      {pinToastType && (
+        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#333', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, maxWidth: '300px', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', animation: 'calCenterToastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
+          {pinToastType === 'new' && '🔒 PINコードを有効にしました'}
+          {pinToastType === 'changed' && '🔒 PINコードを変更しました'}
+          {pinToastType === 'same' && '⚠️ 入力されたコードが同じです。PINコードは変更されませんでした'}
         </div>
       )}
 
@@ -670,6 +723,10 @@ export default function App() {
             }}
             onPinSetup={() => { setShowSettings(false); setShowPinSetup(true); }}
             isPremium={isPremium}
+            onPinClear={() => {
+              setPinClearSuccess(true);
+              setTimeout(() => setPinClearSuccess(false), 3000);
+            }}
             anniversaryCalendarId={anniversaryCalendarId}
             onAnniversaryCalendarChange={(id) => {
               setAnniversaryCalendarId(id);
@@ -693,11 +750,19 @@ export default function App() {
       )}
 
       {showPinSetup && (
-        <PinSetupScreen onComplete={() => {
-          setShowPinSetup(false);
-          setPinSetupSuccess(true);
-          setTimeout(() => setPinSetupSuccess(false), 3000);
-        }} onCancel={() => setShowPinSetup(false)} />
+        <PinSetupScreen
+          onComplete={(type) => {
+            setShowPinSetup(false);
+            setPinToastType(type);
+            setTimeout(() => setPinToastType(null), 3000);
+          }}
+          onCancel={() => {
+            setShowPinSetup(false);
+            if (!localStorage.getItem('myd_pin')) {
+              setSettings(s => ({ ...s, lockEnabled: false }));
+            }
+          }}
+        />
       )}
       {selectedEvent && (
         <EventModal
@@ -727,23 +792,27 @@ export default function App() {
         />
       )}
 
-      {
-        tokenExpired && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: '#fff', borderRadius: '12px', padding: '28px 24px', width: '100%', maxWidth: '320px', textAlign: 'center', border: '0.5px solid #ddd' }}>
-              <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
-                <Clock size={32} strokeWidth={1.5} color="#888" />
-              </div>
-              <div style={{ fontSize: '15px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>セッションが切れました</div>
-              <div style={{ fontSize: '12px', color: '#888', marginBottom: '20px' }}>再度ログインしてください</div>
-              <button onClick={handleLogout}
-                style={{ width: '100%', padding: '10px', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
-                ログイン画面へ
-              </button>
+      {pinClearSuccess && (
+        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#333', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', zIndex: 5000, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', animation: 'calCenterToastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
+          🔓 PINコードをクリアしました
+        </div>
+      )}
+
+      {showTokenExpiredDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', animation: 'calOverlayIn 0.2s ease forwards' }}>
+          <div style={{ background: '#fff', borderRadius: '12px', padding: '28px 24px', width: '100%', maxWidth: '320px', textAlign: 'center', border: '0.5px solid #ddd', animation: 'calModalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
+            <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+              <Clock size={32} strokeWidth={1.5} color="#888" />
             </div>
+            <div style={{ fontSize: '15px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>セッションが切れました</div>
+            <div style={{ fontSize: '12px', color: '#888', marginBottom: '20px' }}>再度ログインしてください</div>
+            <button onClick={() => { setShowTokenExpiredDialog(false); setTokenExpired(false); handleLogout(); }}
+              style={{ width: '100%', padding: '10px', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
+              ログイン画面へ
+            </button>
           </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,17 +1,20 @@
 import { useState, useRef } from "react";
 import { CAL_COLORS, THEMES, FONTS } from "../constants";
 import AboutPanel from "./AboutPanel";
+import { useModalAnimation } from "../hooks";
 
 export default function SettingsPanel({
   settings, onChange, onClose,
   calendars, selectedCalendars, onCalendarToggle, onDescriptionToggle,
   onCalendarReorder,
   onPinSetup, isPremium,
+  onPinClear,
   anniversaryCalendarId, onAnniversaryCalendarChange,
   theme,
 }) {
   const [openSection, setOpenSection] = useState(null);
   const [showAbout, setShowAbout] = useState(false);
+  const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const longPressTimer = useRef(null);
@@ -40,12 +43,12 @@ export default function SettingsPanel({
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', border: '0.5px solid #ddd', maxHeight: '85vh', overflowY: 'auto' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', ...overlayAnim }}
+      onClick={e => { if (e.target === e.currentTarget) close(); }}>
+      <div style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', border: '0.5px solid #ddd', maxHeight: '85vh', overflowY: 'auto', ...contentAnim }}>
         <div style={{ padding: '14px 18px', borderBottom: '0.5px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#222' }}>設定</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#aaa', lineHeight: 1 }}>×</button>
+          <button onClick={close} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#aaa', lineHeight: 1 }}>×</button>
         </div>
         <div style={{ padding: '18px' }}>
 
@@ -79,7 +82,17 @@ export default function SettingsPanel({
             <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>ロック機能</div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}>
               <input type="checkbox" checked={settings.lockEnabled || false}
-                onChange={e => onChange({ ...settings, lockEnabled: e.target.checked })}
+                onChange={e => {
+                const checked = e.target.checked;
+                if (!checked && localStorage.getItem('myd_pin')) {
+                  localStorage.removeItem('myd_pin');
+                  onPinClear?.();
+                }
+                onChange({ ...settings, lockEnabled: checked });
+                if (checked && !localStorage.getItem('myd_pin')) {
+                  setTimeout(() => onPinSetup?.(), 50);
+                }
+              }}
                 style={{ width: '16px', height: '16px', flexShrink: 0 }} />
               <span style={{ fontSize: '13px', color: '#333' }}>起動時にPINロックする</span>
             </label>
@@ -298,7 +311,7 @@ export default function SettingsPanel({
           <button onClick={() => setShowAbout(true)} style={{ padding: '7px 16px', background: 'none', color: '#888', border: '0.5px solid #ddd', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
             このアプリについて
           </button>
-          <button onClick={onClose} style={{ padding: '7px 22px', background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>閉じる</button>
+          <button onClick={close} style={{ padding: '7px 22px', background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>閉じる</button>
         </div>
       </div>
       {showAbout && (

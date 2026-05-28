@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 export function getInitials(name) {
   return name ? name.charAt(0).toUpperCase() : '?';
@@ -27,4 +27,27 @@ export function useSwipe(onSwipeLeft, onSwipeRight) {
     startX.current = null;
   };
   return { onTouchStart: handleTouchStart, onTouchEnd: handleTouchEnd };
+}
+
+export function useModalAnimation(onClose, duration = 200) {
+  const [phase, setPhase] = useState('in');
+
+  const close = useCallback(() => {
+    setPhase('out');
+    setTimeout(() => onClose(), duration);
+  }, [onClose, duration]);
+
+  const overlayAnim = {
+    animation: phase === 'in'
+      ? 'calOverlayIn 0.2s ease forwards'
+      : 'calOverlayOut 0.2s ease forwards',
+  };
+
+  const contentAnim = {
+    animation: phase === 'in'
+      ? 'calModalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+      : 'calModalOut 0.18s ease forwards',
+  };
+
+  return { close, overlayAnim, contentAnim };
 }

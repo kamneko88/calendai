@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { createCalendarEvent, updateCalendarEvent } from "../api";
+import { useModalAnimation } from "../hooks";
 
 export default function DiaryModal({ date, year, accessToken, selectedCalendars, editEvent, onClose, onSaved, theme }) {
+  const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const isEdit = !!editEvent;
   const [title, setTitle] = useState(isEdit ? editEvent.title : '');
   const [description, setDescription] = useState(isEdit ? editEvent.description : '');
@@ -32,9 +34,9 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 3500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: theme.pageBg, borderRadius: '12px', width: '100%', maxWidth: '360px', border: `0.5px solid ${theme.pageBorder}`, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 3500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', ...overlayAnim }}
+      onClick={e => { if (e.target === e.currentTarget) close(); }}>
+      <div style={{ background: theme.pageBg, borderRadius: '12px', width: '100%', maxWidth: '360px', border: `0.5px solid ${theme.pageBorder}`, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', overflow: 'hidden', ...contentAnim }}>
 
         {/* ヘッダー */}
         <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${theme.rowBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -42,7 +44,7 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
             <div style={{ fontSize: '10px', color: theme.monthColor, letterSpacing: '.1em', textTransform: 'uppercase' }}>{isEdit ? 'edit diary' : 'diary'}</div>
             <div style={{ fontSize: '15px', fontWeight: '500', color: theme.dateColor }}>{dateLabel}</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: theme.subColor, lineHeight: 1 }}>×</button>
+          <button onClick={close} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: theme.subColor, lineHeight: 1 }}>×</button>
         </div>
 
         {/* フォーム */}
@@ -95,7 +97,7 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
 
           {/* ボタン */}
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={onClose}
+            <button onClick={close}
               style={{ flex: 1, padding: '10px', border: `0.5px solid ${theme.btnBorder}`, borderRadius: '7px', cursor: 'pointer', background: 'transparent', color: theme.btnColor, fontSize: '13px' }}>
               キャンセル
             </button>

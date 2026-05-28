@@ -23,7 +23,7 @@ export default function LockScreen({ onUnlock, onReset }) {
   const handleDelete = () => setPin(p => p.slice(0, -1));
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f0ebe0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Hiragino Sans, Meiryo, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#f0ebe0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Hiragino Sans, Meiryo, sans-serif', animation: 'calFadeIn 0.35s ease' }}>
       <div style={{ background: '#fdfaf5', borderRadius: '16px', padding: '40px 32px', width: '320px', border: '0.5px solid #ddd', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
         <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
           <Lock size={28} strokeWidth={1.5} color="#555" />

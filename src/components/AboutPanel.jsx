@@ -1,14 +1,17 @@
 import { APP_VERSION } from '../constants';
 import { X } from 'lucide-react';
+import { useModalAnimation } from '../hooks';
 
 export default function AboutPanel({ theme, onClose }) {
+  const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   return (
-    <div onClick={onClose} style={{
+    <div onClick={close} style={{
       position: 'fixed', inset: 0,
       background: 'rgba(0,0,0,0.45)',
       zIndex: 3000,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px',
+      ...overlayAnim,
     }}>
       <div onClick={e => e.stopPropagation()} style={{
         background: theme.pageBg,
@@ -19,9 +22,10 @@ export default function AboutPanel({ theme, onClose }) {
         boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
         border: `0.5px solid ${theme.pageBorder}`,
         textAlign: 'center',
+        ...contentAnim,
       }}>
         {/* 閉じるボタン */}
-        <button onClick={onClose} style={{
+        <button onClick={close} style={{
           position: 'absolute', top: '12px', right: '12px',
           background: 'none', border: 'none', cursor: 'pointer',
           color: theme.subColor, padding: '4px',
@@ -67,7 +71,7 @@ export default function AboutPanel({ theme, onClose }) {
         </div>
 
         {/* 閉じるボタン */}
-        <button onClick={onClose} style={{
+        <button onClick={close} style={{
           width: '100%', marginTop: '24px',
           padding: '11px',
           background: theme.btnActiveBg, color: theme.btnActiveColor,

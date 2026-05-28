@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { fetchYearEvents } from "../api";
 import { WDS } from "../constants";
+import { useModalAnimation } from "../hooks";
 
 const MONTHS_JA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 
 export default function AnniversaryTab({ accessToken, calendars, anniversaryCalendarId, currentYear, onJump, onClose, theme }) {
+  const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedKey, setExpandedKey] = useState(null);
@@ -34,9 +36,9 @@ export default function AnniversaryTab({ accessToken, calendars, anniversaryCale
   });
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: theme.pageBg, borderRadius: '12px', width: '100%', maxWidth: '420px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', border: `0.5px solid ${theme.pageBorder}`, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', ...overlayAnim }}
+      onClick={e => { if (e.target === e.currentTarget) close(); }}>
+      <div style={{ background: theme.pageBg, borderRadius: '12px', width: '100%', maxWidth: '420px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', border: `0.5px solid ${theme.pageBorder}`, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', ...contentAnim }}>
 
         {/* ヘッダー */}
         <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${theme.rowBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
@@ -50,7 +52,7 @@ export default function AnniversaryTab({ accessToken, calendars, anniversaryCale
               </div>
             )}
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: theme.subColor, lineHeight: 1 }}>×</button>
+          <button onClick={close} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: theme.subColor, lineHeight: 1 }}>×</button>
         </div>
 
         {/* リスト */}
@@ -99,7 +101,7 @@ export default function AnniversaryTab({ accessToken, calendars, anniversaryCale
                         </div>
                         {/* ジャンプボタン */}
                         <button
-                          onClick={() => { onJump(d.getMonth() + 1, day); onClose(); }}
+                          onClick={() => { onJump(d.getMonth() + 1, day); close(); }}
                           style={{ flexShrink: 0, padding: '4px 10px', fontSize: '11px', border: `0.5px solid ${theme.btnBorder}`, borderRadius: '5px', cursor: 'pointer', background: theme.headerBg, color: theme.btnColor, whiteSpace: 'nowrap' }}
                           onMouseEnter={e => e.currentTarget.style.background = theme.currentRowBg}
                           onMouseLeave={e => e.currentTarget.style.background = theme.headerBg}>
