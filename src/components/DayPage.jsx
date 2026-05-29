@@ -3,7 +3,7 @@ import { WDS, FS } from "../constants";
 import { fetchCalendarEvents } from "../api";
 import DiaryModal from "./DiaryModal";
 
-export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, theme }) {
+export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, tokenExpired, theme }) {
   const mo = date.getMonth();
   const dy = date.getDate();
   const wd = date.getDay();
@@ -26,6 +26,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
 
   useEffect(() => {
     if (!accessToken || selectedCalendars.length === 0) return;
+    if (tokenExpired) return;
     let cancelled = false;
     setEventsMap({});
     const initialLoading = {};
@@ -50,6 +51,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
 
   useEffect(() => {
     if (!accessToken || !anniversaryCalendarId) { setAnniversaryEvents([]); return; }
+    if (tokenExpired) return;
     let cancelled = false;
     fetchCalendarEvents(accessToken, anniversaryCalendarId, today.getFullYear(), mo + 1, dy, onTokenExpired)
       .then(evs => { if (!cancelled) setAnniversaryEvents(evs.filter(ev => ev.isAllDay)); });

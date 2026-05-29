@@ -80,7 +80,6 @@ export default function App() {
   const viewMenuRef = useRef(null);
   const [pinToastType, setPinToastType] = useState(null);
   const [pinClearSuccess, setPinClearSuccess] = useState(false);
-  const [isSilentRelogging, setIsSilentRelogging] = useState(false);
   const [showTokenExpiredDialog, setShowTokenExpiredDialog] = useState(false);
 
   useEffect(() => {
@@ -94,10 +93,22 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('myd_user');
-    if (savedUser) {
+    (async () => {
+      const savedUser = localStorage.getItem('myd_user');
+      if (!savedUser) return;
       try {
         const userData = JSON.parse(savedUser);
+        // 起動時にトークン有効性を検証
+        const testRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${userData.accessToken}` }
+        });
+        if (testRes.status === 401) {
+          // トークン切れ：ユーザー情報だけセットして再ログイン画面を表示
+          setUser(userData);
+          setTokenExpired(true);
+          setShowTokenExpiredDialog(true);
+          return;
+        }
         setUser(userData);
         const savedCals = localStorage.getItem('myd_selected_calendars');
         if (savedCals) setSelectedCalendars(JSON.parse(savedCals));
@@ -110,7 +121,7 @@ export default function App() {
           if (s.lockEnabled && localStorage.getItem('myd_pin')) setIsLocked(true);
         }
       } catch { }
-    }
+    })();
   }, []);
 
   useEffect(() => {
@@ -208,51 +219,10 @@ export default function App() {
     onError: (err) => console.error('ログイン失敗:', err),
   });
 
-  const silentLogin = useGoogleLogin({
-    scope: 'https://www.googleapis.com/auth/calendar profile email',
-    prompt: 'none',
-    onSuccess: async (tokenResponse) => {
-      const savedUser = JSON.parse(localStorage.getItem('myd_user') || '{}');
-      const updatedUser = { ...savedUser, accessToken: tokenResponse.access_token };
-      localStorage.setItem('myd_user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
-      setTokenExpired(false);
-      setIsSilentRelogging(false);
-    },
-    onError: () => {
-      setIsSilentRelogging(false);
-      setShowTokenExpiredDialog(true);
-    },
-  });
-
   const handleTokenExpired = () => {
-    if (isSilentRelogging) return;
+    if (tokenExpired) return;
     setTokenExpired(true);
-    setIsSilentRelogging(true);
-    if (Capacitor.isNativePlatform()) {
-      (async () => {
-        try {
-          await GoogleAuth.initialize({
-            clientId: '690550080789-5k4483a7a5phqvu72q2iv1jtk8e9qe00.apps.googleusercontent.com',
-            scopes: ['profile', 'email', 'https://www.googleapis.com/auth/calendar'],
-            grantOfflineAccess: false,
-          });
-          const googleUser = await GoogleAuth.signIn();
-          const accessToken = googleUser.authentication.accessToken;
-          const savedUser = JSON.parse(localStorage.getItem('myd_user') || '{}');
-          const updatedUser = { ...savedUser, accessToken };
-          localStorage.setItem('myd_user', JSON.stringify(updatedUser));
-          setUser(updatedUser);
-          setTokenExpired(false);
-          setIsSilentRelogging(false);
-        } catch {
-          setIsSilentRelogging(false);
-          setShowTokenExpiredDialog(true);
-        }
-      })();
-    } else {
-      silentLogin();
-    }
+    setShowTokenExpiredDialog(true);
   };
 
   const loginNative = async () => {
@@ -514,7 +484,7 @@ export default function App() {
                   {/* アカウントセクション */}
                   <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '0.5px solid #eee' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: user.color, color: '#fff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '500', overflow: 'hidden' }}>
-                      {user.picture ? <img src={user.picture} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user.initials}
+                      {user.picture ? <img src={user.picture} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; }} /> : user.initials}
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
@@ -576,45 +546,6 @@ export default function App() {
                       <LogOut size={14} strokeWidth={1.8} style={{ flexShrink: 0 }} /> ログアウト
                     </button>
                     <div style={{ borderTop: '0.5px solid #eee', margin: '6px 0' }} />
-                    <button onClick={() => {
-                      const next = !isPremium;
-                      setIsPremium(next);
-                      if (next) {
-                        handleUpgrade();
-                      } else {
-                        localStorage.removeItem('myd_premium');
-                        if (yearCount > 3) { setYearCount(3); setSettings(s => ({ ...s, defaultYearCount: 3 })); }
-                        if (selectedCalendars.length > 2) {
-                          const reduced = selectedCalendars.slice(0, 2);
-                          setSelectedCalendars(reduced);
-                          localStorage.setItem('myd_selected_calendars', JSON.stringify(reduced));
-                        }
-                        setSettings(s => ({ ...s, fontFamily: 'gothic' }));
-                        setDowngradeNotice(true);
-                        setTimeout(() => setDowngradeNotice(false), 4000);
-                      }
-                      setShowViewMenu(false);
-                    }}
-                      style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      🛠 DEV: {isPremium ? 'NIKKI → 通常版に切替' : '通常版 → NIKKIに切替'}
-                    </button>
-                    <button onClick={() => {
-                      localStorage.removeItem('myd_welcomed');
-                      localStorage.removeItem('myd_skip_welcome');
-                      localStorage.removeItem('myd_banner_shown');
-                      localStorage.removeItem('myd_settings');
-                      localStorage.removeItem('myd_selected_calendars');
-                      localStorage.removeItem('myd_anniversary_cal');
-                      localStorage.removeItem('myd_pin');
-                      window.location.reload();
-                    }}
-                      style={{ width: '100%', padding: '8px 10px', textAlign: 'left', fontSize: '12px', color: '#aaa', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      🛠 DEV: 初期化（初回起動状態に戻す）
-                    </button>
                   </div>
                 </div>
               )}
@@ -667,6 +598,7 @@ export default function App() {
             isPremium={isPremium}
             isMobile={isMobile} onEventClick={setSelectedEvent}
             onTokenExpired={handleTokenExpired}
+            tokenExpired={tokenExpired}
             theme={theme} />
         ))}
       </div>
@@ -732,6 +664,35 @@ export default function App() {
               setAnniversaryCalendarId(id);
               if (id) localStorage.setItem('myd_anniversary_cal', id);
               else localStorage.removeItem('myd_anniversary_cal');
+            }}
+            onDevCommand={(cmd) => {
+              if (cmd === 'toggle') {
+                const next = !isPremium;
+                setIsPremium(next);
+                if (next) {
+                  handleUpgrade();
+                } else {
+                  localStorage.removeItem('myd_premium');
+                  if (yearCount > 3) { setYearCount(3); setSettings(s => ({ ...s, defaultYearCount: 3 })); }
+                  if (selectedCalendars.length > 2) {
+                    const reduced = selectedCalendars.slice(0, 2);
+                    setSelectedCalendars(reduced);
+                    localStorage.setItem('myd_selected_calendars', JSON.stringify(reduced));
+                  }
+                  setSettings(s => ({ ...s, fontFamily: 'gothic' }));
+                  setDowngradeNotice(true);
+                  setTimeout(() => setDowngradeNotice(false), 4000);
+                }
+              } else if (cmd === 'reset') {
+                localStorage.removeItem('myd_welcomed');
+                localStorage.removeItem('myd_skip_welcome');
+                localStorage.removeItem('myd_banner_shown');
+                localStorage.removeItem('myd_settings');
+                localStorage.removeItem('myd_selected_calendars');
+                localStorage.removeItem('myd_anniversary_cal');
+                localStorage.removeItem('myd_pin');
+                window.location.reload();
+              }
             }}
             theme={theme} />
         )
@@ -799,16 +760,31 @@ export default function App() {
       )}
 
       {showTokenExpiredDialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', animation: 'calOverlayIn 0.2s ease forwards' }}>
-          <div style={{ background: '#fff', borderRadius: '12px', padding: '28px 24px', width: '100%', maxWidth: '320px', textAlign: 'center', border: '0.5px solid #ddd', animation: 'calModalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
-            <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
-              <Clock size={32} strokeWidth={1.5} color="#888" />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', animation: 'calOverlayIn 0.2s ease forwards' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '32px 24px', width: '100%', maxWidth: '320px', textAlign: 'center', border: '0.5px solid #ddd', animation: 'calModalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
+            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+              <Clock size={36} strokeWidth={1.5} color="#9e6b50" />
             </div>
-            <div style={{ fontSize: '15px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>セッションが切れました</div>
-            <div style={{ fontSize: '12px', color: '#888', marginBottom: '20px' }}>再度ログインしてください</div>
-            <button onClick={() => { setShowTokenExpiredDialog(false); setTokenExpired(false); handleLogout(); }}
-              style={{ width: '100%', padding: '10px', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
-              ログイン画面へ
+            <div style={{ fontSize: '15px', fontWeight: '600', color: '#222', marginBottom: '10px' }}>長時間のご利用ありがとうございます</div>
+            <div style={{ fontSize: '12px', color: '#888', lineHeight: 1.8, marginBottom: '24px' }}>Googleの仕様により、一定時間が経過すると<br />再ログインが必要になります。</div>
+            <button
+              onClick={() => {
+                setShowTokenExpiredDialog(false);
+                setTokenExpired(false);
+                if (Capacitor.isNativePlatform()) {
+                  loginNative();
+                } else {
+                  login();
+                }
+              }}
+              style={{ width: '100%', padding: '13px', background: '#9e6b50', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#fff" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z" />
+                <path fill="rgba(255,255,255,0.8)" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z" />
+                <path fill="rgba(255,255,255,0.6)" d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z" />
+                <path fill="rgba(255,255,255,0.9)" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.3z" />
+              </svg>
+              Googleで再ログイン
             </button>
           </div>
         </div>

@@ -10,10 +10,12 @@ export default function SettingsPanel({
   onPinSetup, isPremium,
   onPinClear,
   anniversaryCalendarId, onAnniversaryCalendarChange,
+  onDevCommand,
   theme,
 }) {
   const [openSection, setOpenSection] = useState(null);
   const [showAbout, setShowAbout] = useState(false);
+  const [showDevMenu, setShowDevMenu] = useState(false);
   const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
@@ -21,6 +23,58 @@ export default function SettingsPanel({
   const listRef = useRef(null);
   const maxCals = isPremium ? 5 : 2;
   const isMobile = window.innerWidth < 640;
+
+  // 隠しコマンド用ステート
+  // シーケンス：クラシック10回 → ナイト3回 → サクラ2回 → Aboutタップ
+  const devSeq = useRef([]);
+  const DEV_SEQUENCE = [
+    { theme: 'classic', count: 10 },
+    { theme: 'night', count: 3 },
+    { theme: 'sakura', count: 2 },
+  ];
+
+  const handleThemeTap = (key) => {
+    onChange({ ...settings, theme: key });
+    const seq = devSeq.current;
+    const step = seq.length;
+    if (step < DEV_SEQUENCE.length) {
+      const expected = DEV_SEQUENCE[step];
+      if (key === expected.theme) {
+        seq.push({ theme: key, count: (seq[step]?.count || 0) + 1 });
+        // 同じステップのカウントを累積
+      } else {
+        // リセット
+        devSeq.current = key === DEV_SEQUENCE[0].theme ? [{ theme: key, count: 1 }] : [];
+      }
+    }
+  };
+
+  // 各テーマのタップ数を単穎に追跡するまとめたハンドラ
+  const themeTapCounts = useRef({});
+  const handleThemeTapV2 = (key) => {
+    onChange({ ...settings, theme: key });
+    const counts = themeTapCounts.current;
+    counts[key] = (counts[key] || 0) + 1;
+
+    // シーケンスチェック：classicで10回、nightに3回、sakuraに2回たたいたら成功フラグを立てる
+    if (
+      (counts['classic'] || 0) >= 10 &&
+      (counts['night'] || 0) >= 3 &&
+      (counts['sakura'] || 0) >= 2
+    ) {
+      devSeq.current = ['ready'];
+    }
+  };
+
+  const handleAboutTap = () => {
+    if (devSeq.current[0] === 'ready') {
+      devSeq.current = [];
+      themeTapCounts.current = {};
+      setShowDevMenu(true);
+    } else {
+      setShowAbout(true);
+    }
+  };
 
   const handleReorder = (from, to) => {
     if (from === null || to === null || from === to) return;
@@ -151,7 +205,7 @@ export default function SettingsPanel({
             <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>テーマ</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {Object.entries(THEMES).map(([key, t]) => (
-                <button key={key} onClick={() => onChange({ ...settings, theme: key })}
+                <button key={key} onClick={() => handleThemeTapV2(key)}
                   style={{ padding: '10px 12px', border: `0.5px solid ${settings.theme === key ? '#555' : '#ddd'}`, borderRadius: '7px', cursor: 'pointer', textAlign: 'left', background: settings.theme === key ? '#333' : '#fff', color: settings.theme === key ? '#fff' : '#333', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: t.pageBg, border: `2px solid ${t.pageBorder}`, flexShrink: 0 }} />
                   {t.name}
@@ -308,7 +362,7 @@ export default function SettingsPanel({
 
         </div>
         <div style={{ padding: '10px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button onClick={() => setShowAbout(true)} style={{ padding: '7px 16px', background: 'none', color: '#888', border: '0.5px solid #ddd', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+          <button onClick={handleAboutTap} style={{ padding: '7px 16px', background: 'none', color: '#888', border: '0.5px solid #ddd', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
             このアプリについて
           </button>
           <button onClick={close} style={{ padding: '7px 22px', background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>閉じる</button>
@@ -316,6 +370,28 @@ export default function SettingsPanel({
       </div>
       {showAbout && (
         <AboutPanel theme={theme} onClose={() => setShowAbout(false)} />
+      )}
+      {showDevMenu && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#1a1a1a', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '300px', border: '1px solid #444' }}>
+            <div style={{ fontSize: '12px', color: '#888', letterSpacing: '.1em', marginBottom: '16px', textAlign: 'center' }}>🛠 DEV MODE</div>
+            <button onClick={() => {
+              onDevCommand('toggle');
+              setShowDevMenu(false);
+            }} style={{ width: '100%', padding: '12px', marginBottom: '8px', background: '#2a2a2a', color: '#ccc', border: '1px solid #444', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}>
+              {typeof onDevCommand === 'function' ? '🛠 DEV: プラン切替' : '🛠 DEV: プラン切替'}
+            </button>
+            <button onClick={() => {
+              onDevCommand('reset');
+              setShowDevMenu(false);
+            }} style={{ width: '100%', padding: '12px', marginBottom: '16px', background: '#2a2a2a', color: '#ccc', border: '1px solid #444', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}>
+              🛠 DEV: 初期化（初回起動状態に戻す）
+            </button>
+            <button onClick={() => setShowDevMenu(false)} style={{ width: '100%', padding: '10px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
+              閉じる
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

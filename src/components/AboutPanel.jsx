@@ -34,7 +34,9 @@ export default function AboutPanel({ theme, onClose }) {
         </button>
 
         {/* アイコン */}
-        <div style={{ fontSize: '52px', marginBottom: '12px' }}>📖</div>
+        <div style={{ marginBottom: '12px' }}>
+          <img src="/calendai/icon-192.png" alt="CalenDai" style={{ width: '72px', height: '72px', borderRadius: '18px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} />
+        </div>
 
         {/* アプリ名 */}
         <div style={{ fontSize: '22px', fontWeight: '600', color: theme.dateColor, letterSpacing: '.04em' }}>
