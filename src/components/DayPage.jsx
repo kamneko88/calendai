@@ -18,11 +18,44 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
   const [eventsMap, setEventsMap] = useState({});
   const [loadingYears, setLoadingYears] = useState({});
   const [anniversaryEvents, setAnniversaryEvents] = useState([]);
-  const [expandedAnniv, setExpandedAnniv] = useState(null);
   const [diaryModal, setDiaryModal] = useState({ show: false, year: null });
   const [refreshKey, setRefreshKey] = useState(0);
 
   const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+
+  // 周年表示キーワード定義（将来の追加は配列に1行追記するだけ）
+  const ANNIV_KEYWORDS = [
+    { words: ['誕生日', '生誕'],   fmt: (n) => `生誕${n}周年` },
+    { words: ['没', '逝去', '死去'], fmt: (n) => `没後${n}年` },
+    { words: ['結婚'],             fmt: (n) => `結婚${n}周年` },
+    { words: ['交際'],             fmt: (n) => `交際${n}周年` },
+    { words: ['創立'],             fmt: (n) => `創立${n}周年` },
+    { words: ['設立'],             fmt: (n) => `設立${n}周年` },
+    { words: ['開業'],             fmt: (n) => `開業${n}周年` },
+    { words: ['開店'],             fmt: (n) => `開店${n}周年` },
+    { words: ['結成'],             fmt: (n) => `結成${n}周年` },
+    { words: ['デビュー'],         fmt: (n) => `デビュー${n}周年` },
+    { words: ['公開'],             fmt: (n) => `公開${n}周年` },
+    { words: ['発売'],             fmt: (n) => `発売${n}周年` },
+    { words: ['放送開始'],         fmt: (n) => `放送開始${n}周年` },
+  ];
+
+  // 詳細欄から起算年（1900〜2099の最初の4桁数字）を抽出
+  const extractYear = (description) => {
+    if (!description) return null;
+    const m = description.match(/(?:19|20)\d{2}/);
+    return m ? parseInt(m[0], 10) : null;
+  };
+
+  // タイトルからキーワードマッチして周年テキストを生成
+  const getAnnivText = (title, description, displayYear) => {
+    const originYear = extractYear(description);
+    const diff = originYear ? displayYear - originYear : null;
+    if (diff !== null && diff < 0) return title; // 未来年は周年なし
+    const matched = ANNIV_KEYWORDS.find(k => k.words.some(w => title.includes(w)));
+    const suffix = diff !== null ? (matched ? matched.fmt(diff) : `${diff}周年`) : null;
+    return suffix ? `${title}　${suffix}` : title;
+  };
 
   useEffect(() => {
     if (!accessToken || selectedCalendars.length === 0) return;
@@ -79,20 +112,12 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
             <div style={{ fontSize: '8px', letterSpacing: '.14em', color: theme.monthColor, marginBottom: '3px' }}>ANNIVERSARY</div>
             {anniversaryEvents.length > 0 ? (
               anniversaryEvents.map((ev, i) => (
-                <div key={i} style={{ minWidth: 0, width: '100%' }}>
-                  <div onClick={() => ev.description && setExpandedAnniv(expandedAnniv === i ? null : i)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, cursor: ev.description ? 'pointer' : 'default' }}>
-                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#c0607a', flexShrink: 0 }} />
-                    <div style={{ fontSize: '10px', color: theme.eventColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{ev.t}</div>
-                    {ev.description && <span style={{ fontSize: '8px', color: theme.subColor, flexShrink: 0 }}>{expandedAnniv === i ? '▲' : '▼'}</span>}
-                  </div>
-                  {expandedAnniv === i && ev.description && (
-                    <div style={{ fontSize: '10px', color: theme.subColor, lineHeight: 1.6, whiteSpace: 'pre-wrap', marginTop: '3px', paddingLeft: '8px', borderLeft: '2px solid #c0607a' }}>{ev.description}</div>
-                  )}
+                <div key={i} style={{ fontSize: '10px', color: theme.eventColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'left' }}>
+                  {getAnnivText(ev.t, ev.description, today.getFullYear())}
                 </div>
               ))
             ) : (
-              <div style={{ fontSize: '9px', color: theme.emptyColor }}>—</div>
+              <div style={{ fontSize: '9px', color: theme.emptyColor, textAlign: 'left' }}>—</div>
             )}
           </div>
         </div>
