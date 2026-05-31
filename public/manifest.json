@@ -2,7 +2,7 @@
   "name": "CalenDai",
   "short_name": "CalenDai",
   "description": "Googleカレンダーを3年日記・5年日記として閲覧できるアプリ",
-  "start_url": "/calendai/",
+  "start_url": "/kamneko/calendai/",
   "display": "standalone",
   "background_color": "#9e6b50",
   "theme_color": "#9e6b50",

@@ -58,7 +58,7 @@ export default function App() {
   const [tokenExpired, setTokenExpired] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [showViewMenu, setShowViewMenu] = useState(false);
-  const [isPremium, setIsPremium] = useState(() => localStorage.getItem('myd_premium') === 'true');
+  const [isPremium, setIsPremium] = useState(true);
   const [showAnniversary, setShowAnniversary] = useState(false);
   const [isProcessingLogin, setIsProcessingLogin] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -490,11 +490,13 @@ export default function App() {
                       <div style={{ fontSize: '13px', fontWeight: '500', color: '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
                       <div style={{ fontSize: '11px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                     </div>
+                    {/* NIKKIバッジ：将来の有料化に備えてコードは残すが現在は非表示
                     {isPremium && (
                       <div style={{ fontSize: '8px', fontWeight: '700', padding: '2px 6px', borderRadius: '3px', flexShrink: 0, background: theme.currentYearColor, color: '#fff', fontFamily: 'monospace' }}>
                         NIKKI
                       </div>
                     )}
+                    */}
                   </div>
 
                   {/* 表示設定セクション */}
@@ -551,12 +553,13 @@ export default function App() {
               )}
             </div>
 
-            {/* NIKKIバッジ */}
+            {/* NIKKIバッジ：将来の有料化に備えてコードは残すが現在は非表示
             {isPremium && (
               <div style={{ fontSize: '8px', fontWeight: '700', letterSpacing: '.05em', padding: '1px 5px', borderRadius: '3px', flexShrink: 0, background: theme.currentYearColor, color: theme.pageBg, opacity: 0.85, fontFamily: 'monospace' }}>
                 NIKKI
               </div>
             )}
+            */}
 
             {/* デスクトップのみ：ナビ */}
             {!isMobile && navButtons}

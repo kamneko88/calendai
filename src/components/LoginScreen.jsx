@@ -54,13 +54,13 @@ export default function LoginScreen({ onLogin }) {
           <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
             style={{ width: '16px', height: '16px', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }} />
           <div style={{ fontSize: '11px', color: 'rgba(253,250,245,0.85)', lineHeight: 1.8, textAlign: 'left' }}>
-            <a href="https://suneight-okayama.jp/privacy/calendai/"
+            <a href="https://suneight-okayama.jp/kamneko/privacy/calendai/"
               target="_blank" rel="noopener noreferrer"
               style={{ color: '#fdfaf5', textDecoration: 'underline' }}>
               プライバシーポリシー
             </a>
             と
-            <a href="https://suneight-okayama.jp/terms/calendai/"
+            <a href="https://suneight-okayama.jp/kamneko/terms/calendai/"
               target="_blank" rel="noopener noreferrer"
               style={{ color: '#fdfaf5', textDecoration: 'underline' }}>
               利用規約
