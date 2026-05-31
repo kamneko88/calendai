@@ -35,7 +35,7 @@ export default function AboutPanel({ theme, onClose }) {
 
         {/* アイコン */}
         <div style={{ marginBottom: '12px' }}>
-          <img src="/calendai/icon-192.png" alt="CalenDai" style={{ width: '72px', height: '72px', borderRadius: '18px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} />
+          <img src="/kamneko/calendai/icon-192.png" alt="CalenDai" style={{ width: '72px', height: '72px', borderRadius: '18px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} />
         </div>
 
         {/* アプリ名 */}
@@ -60,12 +60,12 @@ export default function AboutPanel({ theme, onClose }) {
 
         {/* リンク */}
         <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <a href="https://suneight-okayama.jp/privacy/calendai/"
+          <a href="https://suneight-okayama.jp/kamneko/privacy/calendai/"
             target="_blank" rel="noopener noreferrer"
             style={{ fontSize: '13px', color: theme.currentYearColor, textDecoration: 'none' }}>
             プライバシーポリシー
           </a>
-          <a href="https://suneight-okayama.jp/terms/calendai/"
+          <a href="https://suneight-okayama.jp/kamneko/terms/calendai/"
             target="_blank" rel="noopener noreferrer"
             style={{ fontSize: '13px', color: theme.currentYearColor, textDecoration: 'none' }}>
             利用規約
