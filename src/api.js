@@ -14,6 +14,7 @@ export async function fetchCalendarEvents(accessToken, calendarId, year, month, 
       : '終日',
     description: ev.description || '',
     isAllDay: !ev.start.dateTime,
+    startDate: ev.start.date || null,
     calendarId,
     year, month, day,
   }));

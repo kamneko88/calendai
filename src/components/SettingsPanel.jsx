@@ -11,11 +11,17 @@ export default function SettingsPanel({
   onPinClear,
   anniversaryCalendarId, onAnniversaryCalendarChange,
   onDevCommand,
+  onCreateAnniversaryCalendar,
   theme,
 }) {
   const [openSection, setOpenSection] = useState(null);
   const [showAbout, setShowAbout] = useState(false);
   const [showDevMenu, setShowDevMenu] = useState(false);
+  const [creatingCalendar, setCreatingCalendar] = useState(false);
+  const [showCalendarNameModal, setShowCalendarNameModal] = useState(false);
+  const [calendarNameInput, setCalendarNameInput] = useState('かれんだいAnniversary');
+  const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
+  const [pendingCalendarName, setPendingCalendarName] = useState('');
   const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
@@ -346,14 +352,31 @@ export default function SettingsPanel({
                           style={{ width: '15px', height: '15px', flexShrink: 0 }} />
                         <div style={{ width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
                         <span style={{ fontSize: '13px', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.summary}</span>
-                        {isAnniv && <span style={{ fontSize: '10px', color: '#fff', background: '#c0607a', borderRadius: '3px', padding: '1px 5px', flexShrink: 0 }}>推奨</span>}
                       </label>
                     );
                   })}
                   <div style={{ padding: '10px 12px' }}>
-                    <button disabled style={{ fontSize: '12px', color: '#ccc', background: 'none', border: '0.5px dashed #ddd', borderRadius: '6px', padding: '6px 12px', cursor: 'not-allowed' }}>
-                      ＋ 新しく記念日カレンダーを作成（近日実装）
-                    </button>
+                    {anniversaryCalendarId ? (
+                      <div>
+                        <button disabled style={{ fontSize: '12px', color: '#ccc', background: 'none', border: '0.5px dashed #ddd', borderRadius: '6px', padding: '6px 12px', cursor: 'not-allowed' }}>
+                          ＋ 新しく記念日カレンダーを作成
+                        </button>
+                        <div style={{ fontSize: '11px', color: '#bbb', marginTop: '6px' }}>別の記念日カレンダーを作成するときは、一度未設定にしてください</div>
+                      </div>
+                    ) : (
+                      <button
+                        disabled={creatingCalendar}
+                        onClick={() => {
+                          // 既存に「かれんだいAnniversary」があれば「(1)」を付加
+                          const baseName = 'かれんだいAnniversary';
+                          const exists = calendars.some(c => c.summary === baseName);
+                          setCalendarNameInput(exists ? `${baseName}(1)` : baseName);
+                          setShowCalendarNameModal(true);
+                        }}
+                        style={{ fontSize: '12px', color: creatingCalendar ? '#bbb' : '#9e6b50', background: 'none', border: `0.5px dashed ${creatingCalendar ? '#ddd' : '#c8956a'}`, borderRadius: '6px', padding: '6px 12px', cursor: creatingCalendar ? 'wait' : 'pointer' }}>
+                        {creatingCalendar ? '作成中...' : '＋ 新しく記念日カレンダーを作成'}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -370,6 +393,81 @@ export default function SettingsPanel({
       </div>
       {showAbout && (
         <AboutPanel theme={theme} onClose={() => setShowAbout(false)} />
+      )}
+      {showCalendarNameModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '300px', border: '0.5px solid #ddd', animation: 'calModalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: '#222', marginBottom: '6px' }}>新しい記念日カレンダーの作成</div>
+            <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '16px' }}>Googleカレンダーに新しいカレンダーを作成します</div>
+            <input
+              type="text"
+              value={calendarNameInput}
+              onChange={e => setCalendarNameInput(e.target.value)}
+              autoFocus
+              style={{ width: '100%', padding: '10px 12px', fontSize: '14px', border: '1px solid #ddd', borderRadius: '8px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box' }}
+            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setShowCalendarNameModal(false)}
+                style={{ flex: 1, padding: '10px', background: '#fff', color: '#888', border: '0.5px solid #ddd', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                キャンセル
+              </button>
+              <button
+                disabled={!calendarNameInput.trim() || creatingCalendar}
+                onClick={async () => {
+                  const name = calendarNameInput.trim();
+                  const isDuplicate = calendars.some(c => c.summary === name);
+                  if (isDuplicate) {
+                    setShowCalendarNameModal(false);
+                    setPendingCalendarName(name);
+                    setShowDuplicateConfirm(true);
+                    return;
+                  }
+                  setShowCalendarNameModal(false);
+                  setCreatingCalendar(true);
+                  try {
+                    await onCreateAnniversaryCalendar(name);
+                  } finally {
+                    setCreatingCalendar(false);
+                  }
+                }}
+                style={{ flex: 1, padding: '10px', background: calendarNameInput.trim() ? '#9e6b50' : '#ddd', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: calendarNameInput.trim() ? 'pointer' : 'not-allowed' }}>
+                作成
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showDuplicateConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 4100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '300px', border: '0.5px solid #ddd', animation: 'calModalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: '#222', marginBottom: '8px' }}>同名のカレンダーがあります</div>
+            <div style={{ fontSize: '13px', color: '#666', lineHeight: 1.7, marginBottom: '20px' }}>「{pendingCalendarName}」と同じ名前のカレンダーがすでに存在します。<br />同じ名前で作成しますか？</div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  setShowDuplicateConfirm(false);
+                  setShowCalendarNameModal(true);
+                }}
+                style={{ flex: 1, padding: '10px', background: '#fff', color: '#888', border: '0.5px solid #ddd', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                戻る
+              </button>
+              <button
+                onClick={async () => {
+                  setShowDuplicateConfirm(false);
+                  setCreatingCalendar(true);
+                  try {
+                    await onCreateAnniversaryCalendar(pendingCalendarName);
+                  } finally {
+                    setCreatingCalendar(false);
+                  }
+                }}
+                style={{ flex: 1, padding: '10px', background: '#9e6b50', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                作成する
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {showDevMenu && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>

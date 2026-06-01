@@ -113,7 +113,15 @@ export default function App() {
         const savedCals = localStorage.getItem('myd_selected_calendars');
         if (savedCals) setSelectedCalendars(JSON.parse(savedCals));
         fetchAllCalendars(userData.accessToken).then(cals => {
-          if (cals.length > 0) setCalendars(cals);
+          if (cals.length > 0) {
+            setCalendars(cals);
+            // 記念日カレンダーが削除されていた場合は未選択に戻す
+            const savedAnnivId = localStorage.getItem('myd_anniversary_cal');
+            if (savedAnnivId && !cals.some(c => c.id === savedAnnivId)) {
+              setAnniversaryCalendarId(null);
+              localStorage.removeItem('myd_anniversary_cal');
+            }
+          }
         });
         const savedSettings = localStorage.getItem('myd_settings');
         if (savedSettings) {
@@ -204,13 +212,12 @@ export default function App() {
         setWelcomeYears(today.getFullYear() - oldestYear + 1);
       }
 
-      // 記念日カレンダーを自動検出（未設定の場合のみ）
-      if (!localStorage.getItem('myd_anniversary_cal')) {
-        const autoAnniv = cals.find(c => /anniversary|記念日|birthday|誕生日/i.test(c.summary));
-        if (autoAnniv) {
-          localStorage.setItem('myd_anniversary_cal', autoAnniv.id);
-          setAnniversaryCalendarId(autoAnniv.id);
-        }
+      // 記念日カレンダーの自動検出は行わない（デフォルト未選択）
+      // ただし、以前選択した記念日カレンダーが削除されていた場合は未選択に戻す
+      const savedAnnivId = localStorage.getItem('myd_anniversary_cal');
+      if (savedAnnivId && !cals.some(c => c.id === savedAnnivId)) {
+        setAnniversaryCalendarId(null);
+        localStorage.removeItem('myd_anniversary_cal');
       }
 
       setShowWelcome(shouldShowWelcome);
@@ -667,6 +674,26 @@ export default function App() {
               setAnniversaryCalendarId(id);
               if (id) localStorage.setItem('myd_anniversary_cal', id);
               else localStorage.removeItem('myd_anniversary_cal');
+            }}
+            onCreateAnniversaryCalendar={async (calendarName) => {
+              try {
+                const res = await fetch('https://www.googleapis.com/calendar/v3/calendars', {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${user.accessToken}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ summary: calendarName }),
+                });
+                if (!res.ok) throw new Error('Failed to create calendar');
+                const newCal = await res.json();
+                const updatedCals = await fetchAllCalendars(user.accessToken);
+                setCalendars(updatedCals);
+                setAnniversaryCalendarId(newCal.id);
+                localStorage.setItem('myd_anniversary_cal', newCal.id);
+              } catch (e) {
+                alert('カレンダーの作成に失敗しました。もう一度お試しください。');
+              }
             }}
             onDevCommand={(cmd) => {
               if (cmd === 'toggle') {

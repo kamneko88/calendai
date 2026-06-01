@@ -86,8 +86,15 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
     if (!accessToken || !anniversaryCalendarId) { setAnniversaryEvents([]); return; }
     if (tokenExpired) return;
     let cancelled = false;
+    const mm = String(mo + 1).padStart(2, '0');
+    const dd = String(dy).padStart(2, '0');
+    const dateStr = `${today.getFullYear()}-${mm}-${dd}`;
     fetchCalendarEvents(accessToken, anniversaryCalendarId, today.getFullYear(), mo + 1, dy, onTokenExpired)
-      .then(evs => { if (!cancelled) setAnniversaryEvents(evs.filter(ev => ev.isAllDay)); });
+      .then(evs => {
+        if (!cancelled) setAnniversaryEvents(
+          evs.filter(ev => ev.isAllDay && ev.startDate === dateStr)
+        );
+      });
     return () => { cancelled = true; };
   }, [accessToken, anniversaryCalendarId, mo, dy]);
 
