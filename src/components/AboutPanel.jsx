@@ -1,6 +1,7 @@
 import { APP_VERSION } from '../constants';
 import { X } from 'lucide-react';
 import { useModalAnimation } from '../hooks';
+import appIcon from '../assets/icon-192.png';
 
 export default function AboutPanel({ theme, onClose }) {
   const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
@@ -35,7 +36,7 @@ export default function AboutPanel({ theme, onClose }) {
 
         {/* アイコン */}
         <div style={{ marginBottom: '12px' }}>
-          <img src="/kamneko/calendai/icon-192.png" alt="CalenDai" style={{ width: '72px', height: '72px', borderRadius: '18px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} />
+          <img src={appIcon} alt="CalenDai" style={{ width: '72px', height: '72px', borderRadius: '18px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} />
         </div>
 
         {/* アプリ名 */}

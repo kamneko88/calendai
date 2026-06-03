@@ -218,6 +218,63 @@
       border: 1px dashed var(--border);
     }
 
+    .keywords-detail {
+      margin-bottom: 20px;
+    }
+
+    .keywords-detail summary {
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      letter-spacing: .04em;
+      padding: 6px 0;
+      user-select: none;
+    }
+
+    .keywords-detail summary:hover {
+      color: var(--accent2);
+    }
+
+    .keywords-body {
+      margin-top: 12px;
+      padding: 16px;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .keywords-body p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      line-height: 1.7;
+    }
+
+    .keywords-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .keywords-table th {
+      text-align: left;
+      padding: 6px 10px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+      letter-spacing: .04em;
+    }
+
+    .keywords-table td {
+      padding: 6px 10px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .keywords-table tr:last-child td {
+      border-bottom: none;
+    }
+
     footer {
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -273,6 +330,31 @@
         同じ月日の過去の記録を複数年並べて表示することで、<br>
         あなたの日々の積み重ねが、ひとつの連用日記になります。
       </p>
+      <details class="keywords-detail">
+        <summary>対応している記念日キーワード</summary>
+        <div class="keywords-body">
+          <p>記念日カレンダーのイベントタイトルに以下のキーワードを含め、説明欄に開始年（例：2020年）を記入すると、今何周年かを自動で表示します。</p>
+          <table class="keywords-table">
+            <thead><tr><th>キーワード</th><th>表示例</th></tr></thead>
+            <tbody>
+              <tr><td>誕生日・生誕</td><td>生誕○周年</td></tr>
+              <tr><td>結婚</td><td>結婚○周年</td></tr>
+              <tr><td>交際</td><td>交際○周年</td></tr>
+              <tr><td>デビュー</td><td>デビュー○周年</td></tr>
+              <tr><td>創立</td><td>創立○周年</td></tr>
+              <tr><td>設立</td><td>設立○周年</td></tr>
+              <tr><td>開業</td><td>開業○周年</td></tr>
+              <tr><td>開店</td><td>開店○周年</td></tr>
+              <tr><td>結成</td><td>結成○周年</td></tr>
+              <tr><td>公開</td><td>公開○周年</td></tr>
+              <tr><td>発売</td><td>発売○周年</td></tr>
+              <tr><td>放送開始</td><td>放送開始○周年</td></tr>
+              <tr><td>没・逝去・死去</td><td>没後○年</td></tr>
+              <tr><td>その他のイベント</td><td>○周年</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
       <div class="app-meta">
         <span class="badge badge-coming">近日公開予定</span>
         <a href="/kamneko/calendai/" class="app-link">Web版を開く →</a>
