@@ -7,7 +7,8 @@
 // v0.7.0 (2026-05-23): ヘッダー2行化・デフォルト5年・NIKKI表記統一
 // v0.8.0 土曜青色・ウェルカムチラ見え修正・PWA対応・アニバーサリーバナー
 // v0.8.1 オーシャンテーマ追加・ナイトTODAYバッジ改善・Aboutページ
-export const APP_VERSION = '0.10.2';
+// v0.10.3 (2026-06-03): 日記編集即時反映・丸ゴシックフォント修正・ログアウト後PINスキップ修正
+export const APP_VERSION = '0.10.3';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -29,5 +30,5 @@ export const FS = {
 export const FONTS = {
   gothic: { name: 'ゴシック', family: 'Hiragino Sans, Meiryo, sans-serif' },
   mincho: { name: '明朝', family: '"Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif' },
-  rounded: { name: '丸ゴシック', family: '"Hiragino Maru Gothic ProN", "Rounded Mplus 1c", sans-serif' },
+  rounded: { name: '丸ゴシック', family: '"Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif' },
 };

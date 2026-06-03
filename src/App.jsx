@@ -80,6 +80,7 @@ export default function App() {
   const viewMenuRef = useRef(null);
   const [pinToastType, setPinToastType] = useState(null);
   const [pinClearSuccess, setPinClearSuccess] = useState(false);
+  const [globalRefreshKey, setGlobalRefreshKey] = useState(0);
   const [showTokenExpiredDialog, setShowTokenExpiredDialog] = useState(false);
 
   useEffect(() => {
@@ -221,6 +222,12 @@ export default function App() {
       }
 
       setShowWelcome(shouldShowWelcome);
+      // PINが設定されていればログイン後にロック（ウェルカム画面表示有無に関わらず）
+      const savedSettings2 = localStorage.getItem('myd_settings');
+      if (savedSettings2) {
+        const s = JSON.parse(savedSettings2);
+        if (s.lockEnabled && localStorage.getItem('myd_pin')) setIsLocked(true);
+      }
       setIsProcessingLogin(false);
     },
     onError: (err) => console.error('ログイン失敗:', err),
@@ -277,6 +284,12 @@ export default function App() {
         }
       }
       setShowWelcome(shouldShowWelcome);
+      // PINが設定されていればログイン後にロック（ウェルカム画面表示有無に関わらず）
+      const savedSettings2 = localStorage.getItem('myd_settings');
+      if (savedSettings2) {
+        const s = JSON.parse(savedSettings2);
+        if (s.lockEnabled && localStorage.getItem('myd_pin')) setIsLocked(true);
+      }
       setIsProcessingLogin(false);
     } catch (e) {
       console.error('Native login error:', e);
@@ -287,7 +300,6 @@ export default function App() {
   const handleLogout = () => {
     setShowSplash(false);
     setUser(null); setCalendars([]); setSelectedCalendars([]); setTokenExpired(false);
-    setIsLocked(false);
     localStorage.removeItem('myd_user');
   };
 
@@ -609,6 +621,7 @@ export default function App() {
             isMobile={isMobile} onEventClick={setSelectedEvent}
             onTokenExpired={handleTokenExpired}
             tokenExpired={tokenExpired}
+            globalRefreshKey={globalRefreshKey}
             theme={theme} />
         ))}
       </div>
@@ -736,7 +749,7 @@ export default function App() {
           selectedCalendars={selectedCalendars}
           editEvent={editEvent}
           onClose={() => setEditEvent(null)}
-          onSaved={() => { setEditEvent(null); }}
+          onSaved={() => { setEditEvent(null); setGlobalRefreshKey(k => k + 1); }}
           theme={theme} />
       )}
 
