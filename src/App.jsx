@@ -297,10 +297,27 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setShowSplash(false);
-    setUser(null); setCalendars([]); setSelectedCalendars([]); setTokenExpired(false);
+    if (Capacitor.isNativePlatform()) {
+      try { await GoogleAuth.signOut(); } catch (e) { console.error('signOut error:', e); }
+    }
+    setUser(null);
+    setCalendars([]);
+    setSelectedCalendars([]);
+    setTokenExpired(false);
+    setWelcomeYears(0);
+    setWelcomeStartYear(null);
+    setIsFirstLogin(false);
+    setSkipWelcome(false);
+    setAnniversaryCalendarId(null);
+    bannerCheckedRef.current = false;
     localStorage.removeItem('myd_user');
+    localStorage.removeItem('myd_welcomed');
+    localStorage.removeItem('myd_skip_welcome');
+    localStorage.removeItem('myd_selected_calendars');
+    localStorage.removeItem('myd_anniversary_cal');
+    localStorage.removeItem('myd_banner_shown');
   };
 
   const handleUpgrade = () => {

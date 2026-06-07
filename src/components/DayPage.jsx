@@ -74,7 +74,12 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
         )
       );
       if (cancelled) return;
-      const merged = allEvs.flat().sort((a, b) => a.h.localeCompare(b.h));
+      const merged = allEvs.flat().sort((a, b) => {
+        const aIdx = selectedCalendars.findIndex(c => c.id === a.calendarId);
+        const bIdx = selectedCalendars.findIndex(c => c.id === b.calendarId);
+        if (aIdx !== bIdx) return aIdx - bIdx;
+        return a.h.localeCompare(b.h);
+      });
       setEventsMap(prev => ({ ...prev, [y]: merged }));
       setLoadingYears(prev => ({ ...prev, [y]: false }));
     });

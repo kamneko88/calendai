@@ -12,8 +12,19 @@ export default function SettingsPanel({
   anniversaryCalendarId, onAnniversaryCalendarChange,
   onDevCommand,
   onCreateAnniversaryCalendar,
-  theme,
+  theme = {},
 }) {
+  const panelBg = theme.pageBg || '#fff';
+  const panelBorder = theme.pageBorder || '#ddd';
+  const panelHeaderBorder = theme.rowBorder || '#eee';
+  const labelColor = theme.dateColor || '#222';
+  const subLabelColor = theme.subColor || '#aaa';
+  const emptyColor = theme.emptyColor || '#ccc';
+  const btnBg = theme.headerBg || '#fff';
+  const btnActiveBg = theme.btnActiveBg || '#333';
+  const btnActiveColor = theme.btnActiveColor || '#fff';
+  const btnBorder = theme.btnBorder || '#ddd';
+  const btnColor = theme.btnColor || '#555';
   const [openSection, setOpenSection] = useState(null);
   const [showAbout, setShowAbout] = useState(false);
   const [showDevMenu, setShowDevMenu] = useState(false);
@@ -23,9 +34,6 @@ export default function SettingsPanel({
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
   const [pendingCalendarName, setPendingCalendarName] = useState('');
   const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
-  const [dragIndex, setDragIndex] = useState(null);
-  const [dragOverIndex, setDragOverIndex] = useState(null);
-  const longPressTimer = useRef(null);
   const listRef = useRef(null);
   const maxCals = isPremium ? 5 : 2;
   const isMobile = window.innerWidth < 640;
@@ -82,55 +90,49 @@ export default function SettingsPanel({
     }
   };
 
-  const handleReorder = (from, to) => {
-    if (from === null || to === null || from === to) return;
+  const handleMoveUp = (i) => {
+    if (i === 0) return;
     const newList = [...selectedCalendars];
-    const [removed] = newList.splice(from, 1);
-    newList.splice(to, 0, removed);
+    [newList[i - 1], newList[i]] = [newList[i], newList[i - 1]];
     onCalendarReorder(newList);
-    setDragIndex(null);
-    setDragOverIndex(null);
   };
 
-  const getTouchIndex = (touchY) => {
-    if (!listRef.current) return null;
-    const items = Array.from(listRef.current.children);
-    for (let i = 0; i < items.length; i++) {
-      const rect = items[i].getBoundingClientRect();
-      if (touchY >= rect.top && touchY <= rect.bottom) return i;
-    }
-    return null;
+  const handleMoveDown = (i) => {
+    if (i === selectedCalendars.length - 1) return;
+    const newList = [...selectedCalendars];
+    [newList[i], newList[i + 1]] = [newList[i + 1], newList[i]];
+    onCalendarReorder(newList);
   };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', ...overlayAnim }}
       onClick={e => { if (e.target === e.currentTarget) close(); }}>
-      <div style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', border: '0.5px solid #ddd', maxHeight: '85vh', overflowY: 'auto', ...contentAnim }}>
-        <div style={{ padding: '14px 18px', borderBottom: '0.5px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '15px', fontWeight: '500', color: '#222' }}>設定</span>
-          <button onClick={close} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#aaa', lineHeight: 1 }}>×</button>
+      <div style={{ background: panelBg, borderRadius: '12px', width: '100%', maxWidth: '400px', border: `0.5px solid ${panelBorder}`, maxHeight: '85vh', overflowY: 'auto', ...contentAnim }}>
+        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${panelHeaderBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '15px', fontWeight: '500', color: labelColor }}>設定</span>
+          <button onClick={close} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: subLabelColor, lineHeight: 1 }}>×</button>
         </div>
         <div style={{ padding: '18px' }}>
 
           {/* ナビゲーション */}
           <div style={{ marginBottom: '22px' }}>
-            <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>ナビゲーション</div>
+            <div style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>ナビゲーション</div>
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
               <input type="checkbox" checked={settings.stepNav} onChange={e => onChange({ ...settings, stepNav: e.target.checked })} style={{ width: '16px', height: '16px', marginTop: '1px', flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: '13px', color: '#333' }}>◀ ▶ ボタンで1日ずつ移動する</div>
-                <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>オフ：表示日数分まとめて移動<br />オン：1日ずつ移動</div>
+                <div style={{ fontSize: '13px', color: labelColor }}>◀ ▶ ボタンで1日ずつ移動する</div>
+                <div style={{ fontSize: '11px', color: subLabelColor, marginTop: '3px' }}>オフ：表示日数分まとめて移動<br />オン：1日ずつ移動</div>
               </div>
             </label>
           </div>
 
           {/* 文字サイズ */}
           <div style={{ marginBottom: '22px' }}>
-            <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>文字サイズ</div>
+            <div style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>文字サイズ</div>
             <div style={{ display: 'flex', gap: '8px' }}>
               {[['small', '小'], ['medium', '中'], ['large', '大']].map(([val, label]) => (
                 <button key={val} onClick={() => onChange({ ...settings, fontSize: val })}
-                  style={{ flex: 1, padding: '10px', border: `0.5px solid ${settings.fontSize === val ? '#333' : '#ddd'}`, borderRadius: '7px', cursor: 'pointer', fontSize: val === 'small' ? '12px' : val === 'medium' ? '15px' : '18px', background: settings.fontSize === val ? '#333' : '#fff', color: settings.fontSize === val ? '#fff' : '#555' }}>
+                  style={{ flex: 1, padding: '10px', border: `0.5px solid ${settings.fontSize === val ? btnActiveBg : btnBorder}`, borderRadius: '7px', cursor: 'pointer', fontSize: val === 'small' ? '12px' : val === 'medium' ? '15px' : '18px', background: settings.fontSize === val ? btnActiveBg : btnBg, color: settings.fontSize === val ? btnActiveColor : btnColor }}>
                   {label}
                 </button>
               ))}
@@ -139,7 +141,7 @@ export default function SettingsPanel({
 
           {/* ロック機能 */}
           <div style={{ marginBottom: '22px' }}>
-            <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>ロック機能</div>
+            <div style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>ロック機能</div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}>
               <input type="checkbox" checked={settings.lockEnabled || false}
                 onChange={e => {
@@ -154,15 +156,15 @@ export default function SettingsPanel({
                 }
               }}
                 style={{ width: '16px', height: '16px', flexShrink: 0 }} />
-              <span style={{ fontSize: '13px', color: '#333' }}>起動時にPINロックする</span>
+              <span style={{ fontSize: '13px', color: labelColor }}>起動時にPINロックする</span>
             </label>
             {settings.lockEnabled && (
               <div>
-                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '8px' }}>
+                <div style={{ fontSize: '11px', color: subLabelColor, marginBottom: '8px' }}>
                   {localStorage.getItem('myd_pin') ? '✅ PIN設定済み' : '⚠️ PINが未設定です'}
                 </div>
                 <button onClick={() => onPinSetup()}
-                  style={{ padding: '8px 16px', background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+                  style={{ padding: '8px 16px', background: btnActiveBg, color: btnActiveColor, border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
                   {localStorage.getItem('myd_pin') ? 'PINを変更する' : 'PINを設定する'}
                 </button>
               </div>
@@ -188,7 +190,7 @@ export default function SettingsPanel({
           {/* 起動時バナー（有料版のみ） */}
           {isPremium && (
             <div style={{ marginBottom: '22px' }}>
-              <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>今日の○年前</div>
+              <div style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>今日の○年前</div>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
@@ -197,8 +199,8 @@ export default function SettingsPanel({
                   style={{ width: '16px', height: '16px', marginTop: '1px', flexShrink: 0 }}
                 />
                 <div>
-                  <div style={{ fontSize: '13px', color: '#333' }}>起動時に過去の記録を表示する</div>
-                  <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>
+                  <div style={{ fontSize: '13px', color: labelColor }}>起動時に過去の記録を表示する</div>
+                  <div style={{ fontSize: '11px', color: subLabelColor, marginTop: '3px' }}>
                     アプリを開いたとき、今日の過去の予定をお知らせします
                   </div>
                 </div>
@@ -208,11 +210,11 @@ export default function SettingsPanel({
 
           {/* テーマ */}
           <div style={{ marginBottom: '22px' }}>
-            <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>テーマ</div>
+            <div style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>テーマ</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {Object.entries(THEMES).map(([key, t]) => (
                 <button key={key} onClick={() => handleThemeTapV2(key)}
-                  style={{ padding: '10px 12px', border: `0.5px solid ${settings.theme === key ? '#555' : '#ddd'}`, borderRadius: '7px', cursor: 'pointer', textAlign: 'left', background: settings.theme === key ? '#333' : '#fff', color: settings.theme === key ? '#fff' : '#333', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+                  style={{ padding: '10px 12px', border: `0.5px solid ${settings.theme === key ? btnActiveBg : btnBorder}`, borderRadius: '7px', cursor: 'pointer', textAlign: 'left', background: settings.theme === key ? btnActiveBg : btnBg, color: settings.theme === key ? btnActiveColor : labelColor, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: t.pageBg, border: `2px solid ${t.pageBorder}`, flexShrink: 0 }} />
                   {t.name}
                 </button>
@@ -225,75 +227,59 @@ export default function SettingsPanel({
             <div style={{ marginBottom: '22px' }}>
               <button onClick={() => setOpenSection(o => o === 'cal' ? null : 'cal')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 10px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>表示カレンダー</span>
+                  <span style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', textTransform: 'uppercase' }}>表示カレンダー</span>
                   <span style={{ fontSize: '10px', color: '#bbb' }}>（最大{maxCals}つ）</span>
                 </div>
                 <span style={{ fontSize: '10px', color: '#aaa' }}>{openSection === 'cal' ? '▲' : '▼'}</span>
               </button>
 
               {selectedCalendars.length === 0 ? (
-                <div style={{ fontSize: '11px', color: '#bbb', marginBottom: '8px' }}>未選択</div>
+                <div style={{ fontSize: '11px', color: emptyColor, marginBottom: '8px' }}>未選択</div>
               ) : (
                 <>
+                  <div style={{ fontSize: '10px', color: subLabelColor, marginBottom: '8px' }}>▲▼ボタンで表示順を入れ替えられます</div>
                   <div ref={listRef} style={{ marginBottom: '6px' }}>
                     {selectedCalendars.map((cal, i) => (
                       <div
                         key={cal.id}
-                        draggable={!isMobile}
-                        onDragStart={() => setDragIndex(i)}
-                        onDragOver={e => { e.preventDefault(); setDragOverIndex(i); }}
-                        onDrop={() => handleReorder(dragIndex, i)}
-                        onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
-                        onTouchStart={() => {
-                          longPressTimer.current = setTimeout(() => {
-                            setDragIndex(i);
-                            if (navigator.vibrate) navigator.vibrate(40);
-                          }, 500);
-                        }}
-                        onTouchMove={e => {
-                          if (dragIndex === null) { clearTimeout(longPressTimer.current); return; }
-                          e.preventDefault();
-                          const idx = getTouchIndex(e.touches[0].clientY);
-                          if (idx !== null) setDragOverIndex(idx);
-                        }}
-                        onTouchEnd={() => {
-                          clearTimeout(longPressTimer.current);
-                          handleReorder(dragIndex, dragOverIndex);
-                        }}
                         style={{
                           display: 'flex', alignItems: 'center', gap: '10px',
                           padding: '9px 10px', marginBottom: '4px',
                           borderRadius: '7px',
-                          border: `1px solid ${dragIndex === i ? '#aaa' : dragOverIndex === i ? '#bbb' : '#eee'}`,
-                          background: dragIndex === i ? '#f0f0f0' : dragOverIndex === i ? '#fafafa' : '#fff',
-                          opacity: dragIndex === i ? 0.7 : 1,
-                          cursor: isMobile ? 'default' : 'grab',
+                          border: `1px solid ${panelHeaderBorder}`,
+                          background: panelBg,
                           userSelect: 'none',
-                          touchAction: dragIndex !== null ? 'none' : 'auto',
-                          transition: 'background 0.1s, border 0.1s',
                         }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: cal.color, flexShrink: 0 }} />
-                        <span style={{ fontSize: '13px', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.name}</span>
-                        {!isMobile && <span style={{ fontSize: '14px', color: '#ccc', cursor: 'grab', flexShrink: 0 }}>⠿</span>}
+                        <span style={{ fontSize: '13px', color: labelColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.name}</span>
+                        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                          <button
+                            onClick={() => handleMoveUp(i)}
+                            disabled={i === 0}
+                            style={{ width: '28px', height: '28px', border: `0.5px solid ${btnBorder}`, borderRadius: '5px', cursor: i === 0 ? 'default' : 'pointer', background: btnBg, color: i === 0 ? emptyColor : btnColor, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => handleMoveDown(i)}
+                            disabled={i === selectedCalendars.length - 1}
+                            style={{ width: '28px', height: '28px', border: `0.5px solid ${btnBorder}`, borderRadius: '5px', cursor: i === selectedCalendars.length - 1 ? 'default' : 'pointer', background: btnBg, color: i === selectedCalendars.length - 1 ? emptyColor : btnColor, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            ▼
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  {selectedCalendars.length > 1 && (
-                    <div style={{ fontSize: '10px', color: '#bbb', marginBottom: '8px' }}>
-                      {isMobile ? '長押しで並べ替えられます' : 'ドラッグ（⠿）で並べ替えられます'}
-                    </div>
-                  )}
                 </>
               )}
 
               {openSection === 'cal' && (
-                <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden', marginTop: '8px' }}>
+                <div style={{ border: `0.5px solid ${panelHeaderBorder}`, borderRadius: '8px', overflow: 'hidden', marginTop: '8px' }}>
                   {calendars.map((cal, i) => {
                     const isSelected = selectedCalendars.some(c => c.id === cal.id);
                     const selectedCal = selectedCalendars.find(c => c.id === cal.id);
                     const isDisabled = !isSelected && selectedCalendars.length >= maxCals;
                     return (
-                      <div key={cal.id} style={{ borderBottom: '0.5px solid #f5f5f5', background: isSelected ? '#fafafa' : '#fff' }}>
+                      <div key={cal.id} style={{ borderBottom: `0.5px solid ${panelHeaderBorder}`, background: isSelected ? theme.currentRowBg || '#fafafa' : panelBg }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.4 : 1 }}>
                           <input type="checkbox" checked={isSelected} disabled={isDisabled} onChange={() => onCalendarToggle(cal)} style={{ width: '15px', height: '15px', flexShrink: 0 }} />
                           <div style={{ width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
@@ -319,12 +305,12 @@ export default function SettingsPanel({
           {calendars.length > 0 && (
             <div>
               <button onClick={() => setOpenSection(o => o === 'anniv' ? null : 'anniv')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 8px 0' }}>
-                <span style={{ fontSize: '10px', color: '#aaa', letterSpacing: '.1em', textTransform: 'uppercase' }}>記念日カレンダー</span>
+                <span style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', textTransform: 'uppercase' }}>記念日カレンダー</span>
                 <span style={{ fontSize: '10px', color: '#aaa' }}>{openSection === 'anniv' ? '▲' : '▼'}</span>
               </button>
               <div style={{ marginBottom: openSection === 'anniv' ? '10px' : '0' }}>
                 {!anniversaryCalendarId ? (
-                  <span style={{ fontSize: '11px', color: '#bbb' }}>未設定</span>
+                  <span style={{ fontSize: '11px', color: emptyColor }}>未設定</span>
                 ) : (() => {
                   const cal = calendars.find(c => c.id === anniversaryCalendarId);
                   return cal ? (
@@ -336,17 +322,17 @@ export default function SettingsPanel({
                 })()}
               </div>
               {openSection === 'anniv' && (
-                <div style={{ border: '0.5px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: 'pointer', borderBottom: '0.5px solid #f5f5f5' }}>
-                    <input type="radio" name="anniversaryCal" checked={!anniversaryCalendarId}
-                      onChange={() => onAnniversaryCalendarChange(null)}
-                      style={{ width: '15px', height: '15px', flexShrink: 0 }} />
-                    <span style={{ fontSize: '13px', color: '#aaa' }}>未設定</span>
+                <div style={{ border: `0.5px solid ${panelHeaderBorder}`, borderRadius: '8px', overflow: 'hidden' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: 'pointer', borderBottom: `0.5px solid ${panelHeaderBorder}` }}>
+                  <input type="radio" name="anniversaryCal" checked={!anniversaryCalendarId}
+                  onChange={() => onAnniversaryCalendarChange(null)}
+                  style={{ width: '15px', height: '15px', flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: subLabelColor }}>未設定</span>
                   </label>
                   {calendars.map((cal, i) => {
                     const isAnniv = /anniversary|記念日|birthday|誕生日/i.test(cal.summary);
                     return (
-                      <label key={cal.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: 'pointer', borderBottom: '0.5px solid #f5f5f5', background: anniversaryCalendarId === cal.id ? '#fafafa' : '#fff' }}>
+                      <label key={cal.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: 'pointer', borderBottom: `0.5px solid ${panelHeaderBorder}`, background: anniversaryCalendarId === cal.id ? theme.currentRowBg || '#fafafa' : panelBg }}>
                         <input type="radio" name="anniversaryCal" checked={anniversaryCalendarId === cal.id}
                           onChange={() => onAnniversaryCalendarChange(cal.id)}
                           style={{ width: '15px', height: '15px', flexShrink: 0 }} />
@@ -385,10 +371,10 @@ export default function SettingsPanel({
 
         </div>
         <div style={{ padding: '10px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button onClick={handleAboutTap} style={{ padding: '7px 16px', background: 'none', color: '#888', border: '0.5px solid #ddd', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+          <button onClick={handleAboutTap} style={{ padding: '7px 16px', background: 'none', color: subLabelColor, border: `0.5px solid ${panelBorder}`, borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
             このアプリについて
           </button>
-          <button onClick={close} style={{ padding: '7px 22px', background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>閉じる</button>
+          <button onClick={close} style={{ padding: '7px 22px', background: btnActiveBg, color: btnActiveColor, border: 'none', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>閉じる</button>
         </div>
       </div>
       {showAbout && (

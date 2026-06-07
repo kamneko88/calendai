@@ -32,12 +32,19 @@ export async function fetchAllCalendars(accessToken) {
 export async function fetchOldestEventYear(accessToken) {
   try {
     const res = await fetch(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events?orderBy=startTime&singleEvents=true&maxResults=20&timeMin=2006-04-01T00:00:00Z',
+      'https://www.googleapis.com/calendar/v3/calendars/primary/events?orderBy=startTime&singleEvents=true&maxResults=50&timeMin=2006-04-01T00:00:00Z',
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     if (!res.ok) return null;
     const data = await res.json();
     if (data.items && data.items.length > 0) {
+      // 繰り返しイベント・終日イベント（誕生日等）を除外して通常イベントのみ対象
+      const normal = data.items.filter(ev => !ev.recurringEventId && ev.start.dateTime);
+      if (normal.length > 0) {
+        const oldest = normal[0].start.dateTime;
+        return new Date(oldest).getFullYear();
+      }
+      // 通常イベントがなければ終日イベントも含めて再チェック（繰り返しは除外）
       const nonRecurring = data.items.filter(ev => !ev.recurringEventId);
       if (nonRecurring.length > 0) {
         const oldest = nonRecurring[0].start.dateTime || nonRecurring[0].start.date;

@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "690550080789-1hjar31rkg7rnji460ii8pqufimc1mg1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "jp.kamneko88.calendai",
+            "certificate_hash": "4582069ac8b89c6b13eca36eac0d3a04486055e1"
+          }
+        },
+        {
+          "client_id": "690550080789-bh1bgruhi0jugkkvv8dk35tgkt6re42n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "jp.kamneko88.calendai",
+            "certificate_hash": "5cd588bc2be102c389a439cf8b1797d61418527e"
+          }
+        },
+        {
           "client_id": "690550080789-h6rihv5f27m5988sn36eiqfnmhkthkg2.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
