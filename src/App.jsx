@@ -194,7 +194,13 @@ export default function App() {
       const saved = localStorage.getItem('myd_selected_calendars');
       let newSelectedCals;
       if (saved) {
-        newSelectedCals = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // 保存済みカレンダーが現在のアカウントのものか照合
+        const valid = parsed.filter(c => cals.some(cal => cal.id === c.id));
+        newSelectedCals = valid.length > 0 ? valid : (() => {
+          const primary = cals.find(c => c.primary) || cals[0];
+          return primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
+        })();
       } else {
         const primary = cals.find(c => c.primary) || cals[0];
         newSelectedCals = primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
@@ -265,9 +271,19 @@ export default function App() {
 
       const cals = await fetchAllCalendars(accessToken);
       const saved = localStorage.getItem('myd_selected_calendars');
-      const primary = cals.find(c => c.primary) || cals[0];
-      const newSelectedCals = saved ? JSON.parse(saved)
-        : primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
+      let newSelectedCals;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // 保存済みカレンダーが現在のアカウントのものか照合
+        const valid = parsed.filter(c => cals.some(cal => cal.id === c.id));
+        newSelectedCals = valid.length > 0 ? valid : (() => {
+          const primary = cals.find(c => c.primary) || cals[0];
+          return primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
+        })();
+      } else {
+        const primary = cals.find(c => c.primary) || cals[0];
+        newSelectedCals = primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
+      }
 
       localStorage.setItem('myd_user', JSON.stringify(userData));
       setUser(userData);
@@ -312,10 +328,13 @@ export default function App() {
     setSkipWelcome(false);
     setAnniversaryCalendarId(null);
     bannerCheckedRef.current = false;
+    const newBase = new Date(today);
+    newBase.setDate(today.getDate() - (loadSettings().defaultDayCount - 1 || 1));
+    setBase(newBase);
+    setBaseYear(today.getFullYear());
     localStorage.removeItem('myd_user');
     localStorage.removeItem('myd_welcomed');
     localStorage.removeItem('myd_skip_welcome');
-    localStorage.removeItem('myd_selected_calendars');
     localStorage.removeItem('myd_anniversary_cal');
     localStorage.removeItem('myd_banner_shown');
   };
@@ -446,6 +465,7 @@ export default function App() {
     />
   );
   if (isLocked) return <LockScreen
+    theme={theme}
     onUnlock={() => setIsLocked(false)}
     onReset={() => {
       localStorage.removeItem('myd_pin');
@@ -772,6 +792,7 @@ export default function App() {
 
       {showPinSetup && (
         <PinSetupScreen
+          theme={theme}
           onComplete={(type) => {
             setShowPinSetup(false);
             setPinToastType(type);

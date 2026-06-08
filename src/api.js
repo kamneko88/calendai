@@ -1,3 +1,19 @@
+// 日本の祝日カレンダーから指定月の祝日日付リストを取得
+export async function fetchJapaneseHolidays(accessToken, year, month) {
+  const HOLIDAY_CAL_ID = 'ja.japanese#holiday@group.v.calendar.google.com';
+  const timeMin = new Date(year, month - 1, 1).toISOString();
+  const timeMax = new Date(year, month, 0, 23, 59, 59).toISOString();
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(HOLIDAY_CAL_ID)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true`;
+  try {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.items || []).map(ev => ev.start.date);
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchCalendarEvents(accessToken, calendarId, year, month, day, onTokenExpired) {
   const timeMin = new Date(year, month - 1, day, 0, 0, 0).toISOString();
   const timeMax = new Date(year, month - 1, day, 23, 59, 59).toISOString();

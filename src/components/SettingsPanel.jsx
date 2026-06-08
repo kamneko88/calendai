@@ -283,14 +283,14 @@ export default function SettingsPanel({
                         <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.4 : 1 }}>
                           <input type="checkbox" checked={isSelected} disabled={isDisabled} onChange={() => onCalendarToggle(cal)} style={{ width: '15px', height: '15px', flexShrink: 0 }} />
                           <div style={{ width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
-                          <span style={{ fontSize: '13px', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.summary}</span>
-                        </label>
-                        {isSelected && (
+                          <span style={{ fontSize: '13px', color: labelColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.summary}</span>
+                          </label>
+                          {isSelected && (
                           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 12px 10px 37px', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={selectedCal?.showDescription || false}
-                              onChange={() => onDescriptionToggle(cal.id)}
-                              style={{ width: '13px', height: '13px', flexShrink: 0 }} />
-                            <span style={{ fontSize: '11px', color: '#888' }}>説明欄を表示する</span>
+                          <input type="checkbox" checked={selectedCal?.showDescription || false}
+                          onChange={() => onDescriptionToggle(cal.id)}
+                          style={{ width: '13px', height: '13px', flexShrink: 0 }} />
+                          <span style={{ fontSize: '11px', color: subLabelColor }}>説明欄を表示する</span>
                           </label>
                         )}
                       </div>
@@ -337,7 +337,7 @@ export default function SettingsPanel({
                           onChange={() => onAnniversaryCalendarChange(cal.id)}
                           style={{ width: '15px', height: '15px', flexShrink: 0 }} />
                         <div style={{ width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0, background: cal.backgroundColor || CAL_COLORS[i % CAL_COLORS.length] }} />
-                        <span style={{ fontSize: '13px', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.summary}</span>
+                        <span style={{ fontSize: '13px', color: labelColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cal.summary}</span>
                       </label>
                     );
                   })}

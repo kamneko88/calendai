@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
 import { WDS, FS } from "../constants";
-import { fetchCalendarEvents } from "../api";
+import { fetchCalendarEvents, fetchJapaneseHolidays } from "../api";
 import DiaryModal from "./DiaryModal";
 
 export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, tokenExpired, globalRefreshKey, theme }) {
-  const mo = date.getMonth();
-  const dy = date.getDate();
-  const wd = date.getDay();
-  const isWe = wd === 0 || wd === 6;
-  const isSat = wd === 6;
-  const dayColor = isSat ? theme.saturdayColor : isWe ? theme.weekendColor : theme.dateColor;
-  const daySubColor = isSat ? theme.saturdayColor : isWe ? theme.weekendColor : theme.subColor;
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
   const fs = FS[fontSize];
@@ -20,6 +13,15 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
   const [anniversaryEvents, setAnniversaryEvents] = useState([]);
   const [diaryModal, setDiaryModal] = useState({ show: false, year: null });
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isHoliday, setIsHoliday] = useState(false);
+
+  const mo = date.getMonth();
+  const dy = date.getDate();
+  const wd = date.getDay();
+  const isWe = wd === 0 || wd === 6;
+  const isSat = wd === 6;
+  const dayColor = isSat ? theme.saturdayColor : (isWe || isHoliday) ? theme.weekendColor : theme.dateColor;
+  const daySubColor = isSat ? theme.saturdayColor : (isWe || isHoliday) ? theme.weekendColor : theme.subColor;
 
   const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
@@ -86,6 +88,16 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
 
     return () => { cancelled = true; };
   }, [accessToken, mo, dy, yearCount, baseYear, selectedCalendars, refreshKey, globalRefreshKey]);
+
+  // 祝日判定
+  useEffect(() => {
+    if (!accessToken) return;
+    const mm = String(mo + 1).padStart(2, '0');
+    const dd = String(dy).padStart(2, '0');
+    const dateStr = `${today.getFullYear()}-${mm}-${dd}`;
+    fetchJapaneseHolidays(accessToken, today.getFullYear(), mo + 1)
+      .then(holidays => setIsHoliday(holidays.includes(dateStr)));
+  }, [accessToken, mo, dy]);
 
   useEffect(() => {
     if (!accessToken || !anniversaryCalendarId) { setAnniversaryEvents([]); return; }
