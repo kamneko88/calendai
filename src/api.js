@@ -14,6 +14,31 @@ export async function fetchJapaneseHolidays(accessToken, year, month) {
   }
 }
 
+export async function fetchMonthEvents(accessToken, calendarId, year, month, onTokenExpired) {
+  const timeMin = new Date(year, month - 1, 1).toISOString();
+  const timeMax = new Date(year, month, 0, 23, 59, 59).toISOString();
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime&maxResults=500`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (res.status === 401) { onTokenExpired && onTokenExpired(); return []; }
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.items || []).map(ev => ({
+    id: ev.id,
+    t: ev.summary || '（タイトルなし）',
+    h: ev.start.dateTime
+      ? new Date(ev.start.dateTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+      : '終日',
+    description: ev.description || '',
+    isAllDay: !ev.start.dateTime,
+    startDate: ev.start.date || null,
+    day: ev.start.dateTime
+      ? new Date(ev.start.dateTime).getDate()
+      : ev.start.date ? parseInt(ev.start.date.split('-')[2]) : null,
+    calendarId,
+    year, month,
+  }));
+}
+
 export async function fetchCalendarEvents(accessToken, calendarId, year, month, day, onTokenExpired) {
   const timeMin = new Date(year, month - 1, day, 0, 0, 0).toISOString();
   const timeMax = new Date(year, month - 1, day, 23, 59, 59).toISOString();

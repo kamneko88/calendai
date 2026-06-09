@@ -3,7 +3,7 @@ import TodayInPastBanner from "./components/TodayInPastBanner";
 import { useState, useEffect, useRef } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { THEMES, CAL_COLORS, FONTS, APP_VERSION } from "./constants";
-import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents, fetchAnniversaryToday } from "./api";
+import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents, fetchAnniversaryToday, fetchJapaneseHolidays, fetchMonthEvents } from "./api";
 import { getInitials, useWindowWidth, useSwipe } from "./hooks";
 import SplashScreen from "./components/SplashScreen";
 import LockScreen from "./components/LockScreen";
@@ -82,6 +82,44 @@ export default function App() {
   const [pinClearSuccess, setPinClearSuccess] = useState(false);
   const [globalRefreshKey, setGlobalRefreshKey] = useState(0);
   const [showTokenExpiredDialog, setShowTokenExpiredDialog] = useState(false);
+  const [holidayCache, setHolidayCache] = useState({});
+  const [eventCache, setEventCache] = useState({});
+
+  // イベントキャッシュ：表示中の月・年のデータを一括取得してキャッシュ
+  useEffect(() => {
+    if (!user || !user.accessToken || selectedCalendars.length === 0) return;
+    const needed = new Set();
+    days.forEach(d => {
+      const baseYr = d.getFullYear();
+      for (let i = 0; i < yearCount; i++) {
+        const y = baseYr - i;
+        selectedCalendars.forEach(cal => {
+          const key = `${cal.id}|${y}|${d.getMonth() + 1}`;
+          if (!eventCache[key]) needed.add(key);
+        });
+      }
+    });
+    needed.forEach(key => {
+      const [calId, year, month] = key.split('|');
+      setEventCache(prev => ({ ...prev, [key]: 'loading' }));
+      fetchMonthEvents(user.accessToken, calId, parseInt(year), parseInt(month), handleTokenExpired)
+        .then(evs => setEventCache(prev => ({ ...prev, [key]: evs })));
+    });
+  }, [user, base, selectedCalendars, yearCount, globalRefreshKey]);
+
+  // 祝日キャッシュ：表示中の月を取得してキャッシュ
+  useEffect(() => {
+    if (!user || !user.accessToken) return;
+    const months = new Set();
+    days.forEach(d => months.add(`${d.getFullYear()}-${d.getMonth() + 1}`));
+    months.forEach(key => {
+      if (holidayCache[key] !== undefined) return;
+      const [y, m] = key.split('-').map(Number);
+      fetchJapaneseHolidays(user.accessToken, y, m).then(holidays => {
+        setHolidayCache(prev => ({ ...prev, [key]: holidays }));
+      });
+    });
+  }, [user, base]);
 
   useEffect(() => {
     if (isMobile && dayCount > 2) handleDayCountChange(2);
@@ -659,6 +697,8 @@ export default function App() {
             onTokenExpired={handleTokenExpired}
             tokenExpired={tokenExpired}
             globalRefreshKey={globalRefreshKey}
+            holidayCache={holidayCache}
+            eventCache={eventCache}
             theme={theme} />
         ))}
       </div>

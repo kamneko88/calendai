@@ -1,27 +1,55 @@
 import { useState, useEffect } from "react";
 import { WDS, FS } from "../constants";
-import { fetchCalendarEvents, fetchJapaneseHolidays } from "../api";
+import { fetchCalendarEvents } from "../api";
 import DiaryModal from "./DiaryModal";
 
-export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, tokenExpired, globalRefreshKey, theme }) {
+export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, tokenExpired, globalRefreshKey, holidayCache = {}, eventCache = {}, theme }) {
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
   const fs = FS[fontSize];
   const years = Array.from({ length: yearCount }, (_, i) => baseYear - i);
-  const [eventsMap, setEventsMap] = useState({});
-  const [loadingYears, setLoadingYears] = useState({});
   const [anniversaryEvents, setAnniversaryEvents] = useState([]);
   const [diaryModal, setDiaryModal] = useState({ show: false, year: null });
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isHoliday, setIsHoliday] = useState(false);
 
   const mo = date.getMonth();
   const dy = date.getDate();
   const wd = date.getDay();
+  const cacheKey = `${date.getFullYear()}-${mo + 1}`;
+  const holidays = holidayCache[cacheKey] || [];
+  const dateStr = `${date.getFullYear()}-${String(mo + 1).padStart(2, '0')}-${String(dy).padStart(2, '0')}`;
+  const isHoliday = holidays.includes(dateStr);
   const isWe = wd === 0 || wd === 6;
   const isSat = wd === 6;
   const dayColor = isSat ? theme.saturdayColor : (isWe || isHoliday) ? theme.weekendColor : theme.dateColor;
   const daySubColor = isSat ? theme.saturdayColor : (isWe || isHoliday) ? theme.weekendColor : theme.subColor;
+
+  // eventCacheから各年のイベントを取得
+  const eventsMap = {};
+  const loadingYears = {};
+  years.forEach(y => {
+    const evs = [];
+    let loading = false;
+    selectedCalendars.forEach(cal => {
+      const key = `${cal.id}|${y}|${mo + 1}`;
+      const cached = eventCache[key];
+      if (cached === 'loading' || cached === undefined) {
+        loading = true;
+      } else if (Array.isArray(cached)) {
+        const dayEvs = cached
+          .filter(ev => ev.day === dy)
+          .map(ev => ({ ...ev, color: cal.color }));
+        evs.push(...dayEvs);
+      }
+    });
+    eventsMap[y] = evs.sort((a, b) => {
+      const aIdx = selectedCalendars.findIndex(c => c.id === a.calendarId);
+      const bIdx = selectedCalendars.findIndex(c => c.id === b.calendarId);
+      if (aIdx !== bIdx) return aIdx - bIdx;
+      return a.h.localeCompare(b.h);
+    });
+    loadingYears[y] = loading;
+  });
 
   const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
@@ -58,46 +86,6 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
     const suffix = diff !== null ? (matched ? matched.fmt(diff) : `${diff}周年`) : null;
     return suffix ? `${title}　${suffix}` : title;
   };
-
-  useEffect(() => {
-    if (!accessToken || selectedCalendars.length === 0) return;
-    if (tokenExpired) return;
-    let cancelled = false;
-    setEventsMap({});
-    const initialLoading = {};
-    years.forEach(y => { initialLoading[y] = true; });
-    setLoadingYears(initialLoading);
-
-    years.forEach(async (y) => {
-      const allEvs = await Promise.all(
-        selectedCalendars.map(cal =>
-          fetchCalendarEvents(accessToken, cal.id, y, mo + 1, dy, onTokenExpired)
-            .then(evs => evs.map(ev => ({ ...ev, color: cal.color })))
-        )
-      );
-      if (cancelled) return;
-      const merged = allEvs.flat().sort((a, b) => {
-        const aIdx = selectedCalendars.findIndex(c => c.id === a.calendarId);
-        const bIdx = selectedCalendars.findIndex(c => c.id === b.calendarId);
-        if (aIdx !== bIdx) return aIdx - bIdx;
-        return a.h.localeCompare(b.h);
-      });
-      setEventsMap(prev => ({ ...prev, [y]: merged }));
-      setLoadingYears(prev => ({ ...prev, [y]: false }));
-    });
-
-    return () => { cancelled = true; };
-  }, [accessToken, mo, dy, yearCount, baseYear, selectedCalendars, refreshKey, globalRefreshKey]);
-
-  // 祝日判定
-  useEffect(() => {
-    if (!accessToken) return;
-    const mm = String(mo + 1).padStart(2, '0');
-    const dd = String(dy).padStart(2, '0');
-    const dateStr = `${today.getFullYear()}-${mm}-${dd}`;
-    fetchJapaneseHolidays(accessToken, today.getFullYear(), mo + 1)
-      .then(holidays => setIsHoliday(holidays.includes(dateStr)));
-  }, [accessToken, mo, dy]);
 
   useEffect(() => {
     if (!accessToken || !anniversaryCalendarId) { setAnniversaryEvents([]); return; }
