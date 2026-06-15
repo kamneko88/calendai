@@ -73,7 +73,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
   // 詳細欄から起算年（1900〜2099の最初の4桁数字）を抽出
   const extractYear = (description) => {
     if (!description) return null;
-    const m = description.match(/(?:19|20)\d{2}/);
+    const m = description.match(/\b(1[4-9]\d{2}|20\d{2})\b/);
     return m ? parseInt(m[0], 10) : null;
   };
 

@@ -7,8 +7,8 @@
 // v0.7.0 (2026-05-23): ヘッダー2行化・デフォルト5年・NIKKI表記統一
 // v0.8.0 土曜青色・ウェルカムチラ見え修正・PWA対応・アニバーサリーバナー
 // v0.8.1 オーシャンテーマ追加・ナイトTODAYバッジ改善・Aboutページ
-// v0.10.8 (2026-06-09): イベント月単位キャッシュ実装（表示高速化・ APIコール大幅削減）
-export const APP_VERSION = '0.10.8';
+// v0.10.9 (2026-06-14): 年をまたぐナビゲーション時のbaseYear修正・記念日年号抖り1400年代対応・ICSサンプルデータ作成
+export const APP_VERSION = '0.10.9';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];

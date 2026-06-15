@@ -414,6 +414,10 @@ export default function App() {
       const d = new Date(base);
       d.setDate(base.getDate() + delta * step);
       setBase(d);
+      // 表示右端の日付から年を更新
+      const newRight = new Date(d);
+      newRight.setDate(d.getDate() + dayCount - 1);
+      setBaseYear(newRight.getFullYear());
       setAnimating(false);
     }, 150);
   };
