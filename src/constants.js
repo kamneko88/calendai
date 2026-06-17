@@ -8,8 +8,8 @@
 // v0.8.0 土曜青色・ウェルカムチラ見え修正・PWA対応・アニバーサリーバナー
 // v0.8.1 オーシャンテーマ追加・ナイトTODAYバッジ改善・Aboutページ
 // v0.10.9 (2026-06-14): 年をまたぐナビゲーション時のbaseYear修正・記念日年号抖り1400年代対応・ICSサンプルデータ作成
-// v0.10.11 (2026-06-17): 日記保存後の即時反映修正・再読み込みボタン実装
-export const APP_VERSION = '0.10.11';
+// v0.10.12 (2026-06-17): EventModalテーマ対応
+export const APP_VERSION = '0.10.12';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];

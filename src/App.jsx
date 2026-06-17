@@ -893,6 +893,7 @@ export default function App() {
           event={selectedEvent}
           calendarName={calName(selectedEvent)}
           isPremium={isPremium}
+          theme={theme}
           onEdit={() => {
             setEditEvent({
               id: selectedEvent.id,
