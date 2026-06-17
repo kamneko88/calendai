@@ -3,7 +3,7 @@ import { WDS, FS } from "../constants";
 import { fetchCalendarEvents } from "../api";
 import DiaryModal from "./DiaryModal";
 
-export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, tokenExpired, globalRefreshKey, holidayCache = {}, eventCache = {}, theme }) {
+export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, tokenExpired, globalRefreshKey, holidayCache = {}, eventCache = {}, onDiarySaved, theme }) {
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
   const fs = FS[fontSize];
@@ -189,7 +189,10 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
           accessToken={accessToken}
           selectedCalendars={selectedCalendars}
           onClose={() => setDiaryModal({ show: false, year: null })}
-          onSaved={() => setRefreshKey(k => k + 1)}
+          onSaved={() => {
+            setDiaryModal({ show: false, year: null });
+            if (onDiarySaved) onDiarySaved(date);
+          }}
           theme={theme}
         />
       )}

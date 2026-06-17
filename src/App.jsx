@@ -558,6 +558,15 @@ export default function App() {
     </button>
   );
 
+  const refreshButton = (
+    <button
+      onClick={() => { setEventCache({}); setHolidayCache({}); setGlobalRefreshKey(k => k + 1); }}
+      title="再読み込み"
+      style={{ ...btnStyle(false), flexShrink: 0, marginLeft: isMobile ? '8px' : '12px', color: theme.subColor }}>
+      ↺
+    </button>
+  );
+
   return (
     <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: FONTS[settings.fontFamily || 'gothic']?.family || FONTS.gothic.family, padding: isMobile ? '8px' : '14px' }}>
 
@@ -666,16 +675,17 @@ export default function App() {
             {!isMobile && jumpRow}
           </div>
 
-          {/* デスクトップのみ：記念日ボタン */}
-          {!isMobile && anniversaryButton}
+          {/* デスクトップのみ：記念日ボタン＋再読み込みボタン */}
+          {!isMobile && <div style={{ display: 'flex', alignItems: 'center' }}>{anniversaryButton}{refreshButton}</div>}
         </div>
 
-        {/* 行2（モバイルのみ）：ナビ＋記念日 */}
+        {/* 行2（モバイルのみ）：ナビ＋記念日＋再読み込み */}
         {isMobile && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             {navButtons}
             <div style={{ flex: 1 }} />
             {anniversaryButton}
+            {refreshButton}
           </div>
         )}
       </div>
@@ -703,6 +713,19 @@ export default function App() {
             globalRefreshKey={globalRefreshKey}
             holidayCache={holidayCache}
             eventCache={eventCache}
+            onDiarySaved={(savedDate) => {
+              const yr = savedDate.getFullYear();
+              const mo = savedDate.getMonth() + 1;
+              setEventCache(prev => {
+                const next = { ...prev };
+                Object.keys(next).forEach(k => {
+                  const parts = k.split('|');
+                  if (parts[1] === String(yr) && parts[2] === String(mo)) delete next[k];
+                });
+                return next;
+              });
+              setGlobalRefreshKey(k => k + 1);
+            }}
             theme={theme} />
         ))}
       </div>
@@ -830,7 +853,22 @@ export default function App() {
           selectedCalendars={selectedCalendars}
           editEvent={editEvent}
           onClose={() => setEditEvent(null)}
-          onSaved={() => { setEditEvent(null); setGlobalRefreshKey(k => k + 1); }}
+          onSaved={() => {
+          // 保存した日付の月キャッシュをクリアして再取得
+          const saved = editEvent.date;
+          const yr = saved.getFullYear();
+          const mo = saved.getMonth() + 1;
+          setEventCache(prev => {
+            const next = { ...prev };
+            Object.keys(next).forEach(k => {
+              const parts = k.split('|');
+              if (parts[1] === String(yr) && parts[2] === String(mo)) delete next[k];
+            });
+            return next;
+          });
+          setEditEvent(null);
+          setGlobalRefreshKey(k => k + 1);
+        }}
           theme={theme} />
       )}
 
