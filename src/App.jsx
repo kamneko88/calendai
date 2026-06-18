@@ -700,7 +700,7 @@ export default function App() {
       }
 
       {/* メインコンテンツ */}
-      <div {...(isMobile ? swipeHandlers : {})} style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', transform: animating ? `translateX(${slideDir > 0 ? '-30px' : '30px'})` : 'translateX(0)', opacity: animating ? 0 : 1, transition: 'transform 0.15s ease, opacity 0.15s ease' }}>
+      <div {...swipeHandlers} style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', transform: animating ? `translateX(${slideDir > 0 ? '-30px' : '30px'})` : 'translateX(0)', opacity: animating ? 0 : 1, transition: 'transform 0.15s ease, opacity 0.15s ease' }}>
         {days.map((d, i) => (
           <DayPage key={i} date={d} yearCount={yearCount} baseYear={d.getFullYear()}
             fontSize={settings.fontSize} isLast={i === days.length - 1}
