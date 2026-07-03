@@ -435,6 +435,17 @@ export default function App() {
     const y = jumpYear ? parseInt(jumpYear) : null;
     const m = jumpMonth ? parseInt(jumpMonth) - 1 : null;
     const d = jumpDay ? parseInt(jumpDay) : null;
+    // バリデーション
+    if (y !== null && (y < 1900 || y > 2100)) { alert('年は1900〜2100の範囲で入力してください'); return; }
+    if (m !== null && (m < 0 || m > 11)) { alert('月は1〜12の範囲で入力してください'); return; }
+    if (d !== null && (d < 1 || d > 31)) { alert('日は1〜31の範囲で入力してください'); return; }
+    // 存在しない日付チェック（閏年対応）
+    if (d !== null) {
+      const checkY = y !== null ? y : right.getFullYear();
+      const checkM = m !== null ? m : right.getMonth();
+      const testDate = new Date(checkY, checkM, d);
+      if (testDate.getDate() !== d) { alert('存在しない日付です'); return; }
+    }
     let target;
     if (y !== null && m !== null && d !== null) target = new Date(y, m, d);
     else if (y !== null && m !== null) target = new Date(y, m, right.getDate());
@@ -489,7 +500,7 @@ export default function App() {
     color: active ? theme.btnActiveColor : theme.btnColor,
   });
 
-  const inputStyle = { padding: '4px 6px', fontSize: '12px', border: '0.5px solid #ccc', borderRadius: '5px', textAlign: 'center', outline: 'none', background: '#fff' };
+  const inputStyle = { padding: '4px 6px', fontSize: '12px', border: '0.5px solid #ccc', borderRadius: '5px', textAlign: 'center', outline: 'none', background: '#fff', color: '#222' };
 
   const calName = (ev) => { const cal = selectedCalendars.find(c => c.id === ev.calendarId); return cal ? cal.name : ''; };
 

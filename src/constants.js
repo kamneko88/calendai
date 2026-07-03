@@ -8,8 +8,8 @@
 // v0.8.0 土曜青色・ウェルカムチラ見え修正・PWA対応・アニバーサリーバナー
 // v0.8.1 オーシャンテーマ追加・ナイトTODAYバッジ改善・Aboutページ
 // v0.10.9 (2026-06-14): 年をまたぐナビゲーション時のbaseYear修正・記念日年号抖り1400年代対応・ICSサンプルデータ作成
-// v0.10.13 (2026-06-18): 横画面スワイプ対応（スワイプを常時適用）
-export const APP_VERSION = '0.10.13';
+// v0.10.14 (2026-07-03): ジャンプ入力欄の文字色明示指定・入力値バリデーション追加・存在しない日付チェック追加
+export const APP_VERSION = '0.10.14';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
