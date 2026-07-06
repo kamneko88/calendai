@@ -25,9 +25,17 @@ It uses your existing Google Calendar data to display up to 5 years of the same 
 
 ## スクリーンショット / Screenshots
 
-| 5年表示（2日） | 日記入力 | 記念日一覧 | テーマ切り替え |
+| 5年表示（2日） | 5年表示（1日） | 3年表示（2日） | 3年表示（1日） |
 |:---:|:---:|:---:|:---:|
-| 5-year 2-day view | Diary input | Anniversary list | Theme settings |
+| ![5year 2day](docs/main_5year_2day.png) | ![5year 1day](docs/main_5year_1day.png) | ![3year 2day](docs/main_3year_2day.png) | ![3year 1day](docs/main_3year_1day.png) |
+
+| 日記入力 | 予定の詳細 | 記念日一覧 | ようこそ画面 |
+|:---:|:---:|:---:|:---:|
+| ![diary](docs/diary_input.png) | ![event](docs/event_detail.png) | ![anniversary](docs/anniversary.png) | ![welcome](docs/welcome.png) |
+
+| 設定（1） | 設定（2） |
+|:---:|:---:|
+| ![settings1](docs/settings1.png) | ![settings2](docs/settings2.png) |
 
 ---
 
