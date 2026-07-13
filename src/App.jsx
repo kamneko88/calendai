@@ -10,7 +10,6 @@ import LockScreen from "./components/LockScreen";
 import PinSetupScreen from "./components/PinSetupScreen";
 import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
-import UserMenu from "./components/UserMenu";
 import EventModal from "./components/EventModal";
 import SettingsPanel from "./components/SettingsPanel";
 import DayPage from "./components/DayPage";
@@ -223,56 +222,63 @@ export default function App() {
     scope: 'https://www.googleapis.com/auth/calendar profile email',
     onSuccess: async (tokenResponse) => {
       setIsProcessingLogin(true);
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-      });
-      const profile = await res.json();
-      const userData = { name: profile.name, email: profile.email, picture: profile.picture, accessToken: tokenResponse.access_token, initials: getInitials(profile.name), color: '#3B82F6' };
-      const cals = await fetchAllCalendars(tokenResponse.access_token);
-      const saved = localStorage.getItem('myd_selected_calendars');
-      let newSelectedCals;
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // 保存済みカレンダーが現在のアカウントのものか照合
-        const valid = parsed.filter(c => cals.some(cal => cal.id === c.id));
-        newSelectedCals = valid.length > 0 ? valid : (() => {
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        });
+        if (!res.ok) throw new Error('userinfo取得に失敗しました');
+        const profile = await res.json();
+        const userData = { name: profile.name, email: profile.email, picture: profile.picture, accessToken: tokenResponse.access_token, initials: getInitials(profile.name), color: '#3B82F6' };
+        const cals = await fetchAllCalendars(tokenResponse.access_token);
+        const saved = localStorage.getItem('myd_selected_calendars');
+        let newSelectedCals;
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // 保存済みカレンダーが現在のアカウントのものか照合
+          const valid = parsed.filter(c => cals.some(cal => cal.id === c.id));
+          newSelectedCals = valid.length > 0 ? valid : (() => {
+            const primary = cals.find(c => c.primary) || cals[0];
+            return primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
+          })();
+        } else {
           const primary = cals.find(c => c.primary) || cals[0];
-          return primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
-        })();
-      } else {
-        const primary = cals.find(c => c.primary) || cals[0];
-        newSelectedCals = primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
-      }
-      const isFirst = !localStorage.getItem('myd_welcomed');
-      const shouldShowWelcome = !localStorage.getItem('myd_skip_welcome');
-      let oldestYear = null;
-      if (shouldShowWelcome) oldestYear = await fetchOldestEventYear(tokenResponse.access_token);
-      localStorage.setItem('myd_user', JSON.stringify(userData));
-      setUser(userData);
-      setCalendars(cals);
-      setSelectedCalendars(newSelectedCals);
-      setIsFirstLogin(isFirst);
-      if (shouldShowWelcome && oldestYear) {
-        setWelcomeStartYear(oldestYear);
-        setWelcomeYears(today.getFullYear() - oldestYear + 1);
-      }
+          newSelectedCals = primary ? [{ id: primary.id, color: primary.backgroundColor || CAL_COLORS[0], name: primary.summary, showDescription: false }] : [];
+        }
+        const isFirst = !localStorage.getItem('myd_welcomed');
+        const shouldShowWelcome = !localStorage.getItem('myd_skip_welcome');
+        let oldestYear = null;
+        if (shouldShowWelcome) oldestYear = await fetchOldestEventYear(tokenResponse.access_token);
+        localStorage.setItem('myd_user', JSON.stringify(userData));
+        setUser(userData);
+        setCalendars(cals);
+        setSelectedCalendars(newSelectedCals);
+        setIsFirstLogin(isFirst);
+        if (shouldShowWelcome && oldestYear) {
+          setWelcomeStartYear(oldestYear);
+          setWelcomeYears(today.getFullYear() - oldestYear + 1);
+        }
 
-      // 記念日カレンダーの自動検出は行わない（デフォルト未選択）
-      // ただし、以前選択した記念日カレンダーが削除されていた場合は未選択に戻す
-      const savedAnnivId = localStorage.getItem('myd_anniversary_cal');
-      if (savedAnnivId && !cals.some(c => c.id === savedAnnivId)) {
-        setAnniversaryCalendarId(null);
-        localStorage.removeItem('myd_anniversary_cal');
-      }
+        // 記念日カレンダーの自動検出は行わない（デフォルト未選択）
+        // ただし、以前選択した記念日カレンダーが削除されていた場合は未選択に戻す
+        const savedAnnivId = localStorage.getItem('myd_anniversary_cal');
+        if (savedAnnivId && !cals.some(c => c.id === savedAnnivId)) {
+          setAnniversaryCalendarId(null);
+          localStorage.removeItem('myd_anniversary_cal');
+        }
 
-      setShowWelcome(shouldShowWelcome);
-      // PINが設定されていればログイン後にロック（ウェルカム画面表示有無に関わらず）
-      const savedSettings2 = localStorage.getItem('myd_settings');
-      if (savedSettings2) {
-        const s = JSON.parse(savedSettings2);
-        if (s.lockEnabled && localStorage.getItem('myd_pin')) setIsLocked(true);
+        setShowWelcome(shouldShowWelcome);
+        // PINが設定されていればログイン後にロック（ウェルカム画面表示有無に関わらず）
+        const savedSettings2 = localStorage.getItem('myd_settings');
+        if (savedSettings2) {
+          const s = JSON.parse(savedSettings2);
+          if (s.lockEnabled && localStorage.getItem('myd_pin')) setIsLocked(true);
+        }
+      } catch (e) {
+        console.error('ログイン処理中にエラー:', e);
+        alert('ログインに失敗しました。通信状況をご確認の上、もう一度お試しください。');
+      } finally {
+        setIsProcessingLogin(false);
       }
-      setIsProcessingLogin(false);
     },
     onError: (err) => console.error('ログイン失敗:', err),
   });

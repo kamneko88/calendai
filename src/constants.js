@@ -9,7 +9,8 @@
 // v0.8.1 オーシャンテーマ追加・ナイトTODAYバッジ改善・Aboutページ
 // v0.10.9 (2026-06-14): 年をまたぐナビゲーション時のbaseYear修正・記念日年号抖り1400年代対応・ICSサンプルデータ作成
 // v0.10.14 (2026-07-03): ジャンプ入力欄の文字色明示指定・入力値バリデーション追加・存在しない日付チェック追加
-export const APP_VERSION = '0.10.14';
+// v0.10.15 (2026-07-12): Web版ログイン処理にtry/catch追加（通信失敗時に画面が固まる不具合を修正）・未使用UserMenuインポート削除
+export const APP_VERSION = '0.10.15';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
