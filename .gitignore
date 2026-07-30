@@ -6,3 +6,12 @@ node_modules/
 
 # ビルド成果物
 dist/
+
+# 署名鍵・環境変数（絶対にコミットしない）
+*.jks
+*.keystore
+.env
+.env.*
+
+# ローカル専用の開発ログ・引き継ぎメモ（Git管理対象外）
+_local/
