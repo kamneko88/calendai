@@ -2,6 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => ({
-  base: mode === 'android' ? '/' : '/kamneko/calendai/',
+  base: mode === 'android' ? '/' : '/calendai/',
   plugins: [react()],
 }))

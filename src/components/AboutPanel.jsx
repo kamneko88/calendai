@@ -61,12 +61,12 @@ export default function AboutPanel({ theme, onClose }) {
 
         {/* リンク */}
         <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <a href="https://suneight-okayama.jp/kamneko/privacy/calendai/"
+          <a href="https://kamneko.com/privacy/calendai/"
             target="_blank" rel="noopener noreferrer"
             style={{ fontSize: '13px', color: theme.currentYearColor, textDecoration: 'none' }}>
             プライバシーポリシー
           </a>
-          <a href="https://suneight-okayama.jp/kamneko/terms/calendai/"
+          <a href="https://kamneko.com/terms/calendai/"
             target="_blank" rel="noopener noreferrer"
             style={{ fontSize: '13px', color: theme.currentYearColor, textDecoration: 'none' }}>
             利用規約

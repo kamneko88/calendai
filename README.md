@@ -4,10 +4,10 @@
 
 > あなたのGoogleカレンダーは、もう5年日記でした。
 
-[![Web App](https://img.shields.io/badge/Web-suneight--okayama.jp-9e6b50)](https://suneight-okayama.jp/kamneko/calendai/)
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Web-green)](https://suneight-okayama.jp/kamneko/)
-[![Version](https://img.shields.io/badge/Version-v0.10.14-blue)](https://github.com/cyabose/calendai)
-[![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red)](https://github.com/cyabose/calendai)
+[![Web App](https://img.shields.io/badge/Web-kamneko.com-9e6b50)](https://kamneko.com/calendai/)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Web-green)](https://kamneko.com/)
+[![Version](https://img.shields.io/badge/Version-v0.10.14-blue)](https://github.com/kamneko88/calendai)
+[![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red)](https://github.com/kamneko88/calendai)
 
 ---
 
@@ -121,7 +121,7 @@ DayPage.jsx × dayCount（1日 or 2日）
 ### インストール / Installation
 
 ```bash
-git clone https://github.com/cyabose/calendai.git
+git clone https://github.com/kamneko88/calendai.git
 cd calendai
 npm install --legacy-peer-deps
 ```
@@ -138,7 +138,7 @@ VITE_GOOGLE_CLIENT_ID=your_google_client_id
 
 ```bash
 npm run dev
-# → http://localhost:5173/kamneko/calendai/
+# → http://localhost:5173/calendai/
 ```
 
 ### ビルド / Build
@@ -162,7 +162,7 @@ npx cap sync
 | Android版（Google Play） | 🔄 審査中 |
 | iOS版 | ❌ 予定なし |
 
-**Web版：** https://suneight-okayama.jp/kamneko/calendai/
+**Web版：** https://kamneko.com/calendai/
 
 ---
 
@@ -177,7 +177,7 @@ npx cap sync
 ## 開発者 / Developer
 
 **Kamneko Labo（かむねこラボ）**  
-https://suneight-okayama.jp/kamneko/
+https://kamneko.com/
 
 ---
 

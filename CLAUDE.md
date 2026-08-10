@@ -30,10 +30,11 @@ Google Play向けAndroid版（Capacitor）とWeb版（さくらVPS）の両方�
 ## Environment
 
 - OS: Windows 11 + VS Code
-- プロジェクトルート: `D:\Data\10_Projects\calendai`
+- プロジェクトルート: `D:\Data\10_Projects\dev\calendai`（2026-08-02にフォルダ管理方針変更により
+  `D:\Data\10_Projects\calendai` から移動）
 - `_local/` はGit管理対象外（開発ログ・引き継ぎメモ置き場）
-- ローカル確認: `npm run dev` → `http://localhost:5173/kamneko/calendai/`
-- Web本番: `https://suneight-okayama.jp/kamneko/calendai/`
+- ローカル確認: `npm run dev` → `http://localhost:5173/calendai/`
+- Web本番: `https://kamneko.com/calendai/`
 
 ### VS Codeとの競合に注意
 
