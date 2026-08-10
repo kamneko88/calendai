@@ -36,11 +36,6 @@ Google Play向けAndroid版（Capacitor）とWeb版（さくらVPS）の両方�
 - ローカル確認: `npm run dev` → `http://localhost:5173/calendai/`
 - Web本番: `https://kamneko.com/calendai/`
 
-### VS Codeとの競合に注意
-
-あつのりさんが同じファイルをVS Codeで開いたまま保存すると、直前の変更が上書きされることがあります。
-ファイルを書き込む前に、対象ファイルをVS Codeで閉じてもらうよう一声かけてください。
-
 ---
 
 ## 技術スタック
@@ -71,7 +66,9 @@ Google Play向けAndroid版（Capacitor）とWeb版（さくらVPS）の両方�
 3. npx cap sync
 4. versionCode（android/app/build.gradle）と APP_VERSION（src/constants.js）を更新
 5. Android Studioで「Generate Signed App Bundle or APK」→ AABを選択
-   → calendai-release.jks を指定 → release選択 → Create
+   → **calendai-upload-key2.jks**（alias: calendai-key2）を指定 → release選択 → Create
+   ※旧`calendai-release.jks`は2026-07-31の漏洩インシデントで失効済み。使用禁止
+   ※パスワードはKeePassの「CalenDai - Androidアップロード鍵」エントリに保管
    ※「Generate Bundles」は未署名のため使用禁止
 6. エミュレーターまたは実機でバージョン表示を確認
 7. Play ConsoleにAABをアップロード
@@ -79,7 +76,8 @@ Google Play向けAndroid版（Capacitor）とWeb版（さくらVPS）の両方�
 
 - `git restore` 後は必ず `npm run build:android` → `npx cap sync` を実行し直すこと
   （distフォルダが古いままだと真っ白画面や古いバージョン表示の原因になる）
-- 署名鍵 `calendai-release.jks`・`.env`・`.env.*` は絶対にコミットしない（`.gitignore`で除外済み）
+- 署名鍵（`*.jks` / `*.keystore`）・`.env`・`.env.*`・`_local/` は絶対にコミットしない
+  （`.gitignore`で除外済み。2026-07-31に`calendai-release.jks`を公開リポジトリへ混入させた前例あり）
 - versionCodeは毎回のビルドで必ずインクリメントする
 
 ### バージョン管理ルール
@@ -110,8 +108,11 @@ Google Play向けAndroid版（Capacitor）とWeb版（さくらVPS）の両方�
 
 ---
 
-## 現在の状態（2026-07-31時点）
+## 現在の状態（2026-08-10時点）
 
-- バージョン：v0.10.15（versionCode 15）→ v1.0.0への切り替え作業中
-- Google Play製品版へのアクセスが承認済み（2026-07-31）。初回本番リリース作業中
+- バージョン：**v1.0.1（versionCode 17）**。ドメイン移行対応版をPlay Console製品版へ審査送信済み・結果待ち
+- Play Storeで公開中なのはv1.0.0（versionCode 16・2026-08-03正式公開）
+- 2026-08-10にドメインを`suneight-okayama.jp/kamneko/calendai/` →
+  **`kamneko.com/calendai/`** へ移行。公開メールも`support@kamneko.com`へ変更
+- 積み残し：Play Console推奨事項3件（エッジツーエッジ表示・非推奨API・R8）の実機目視確認
 - 詳細な作業履歴・引き継ぎ事項は `_local/CalenDai-devlog.md` を参照
