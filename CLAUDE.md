@@ -108,11 +108,13 @@ Google Play向けAndroid版（Capacitor）とWeb版（さくらVPS）の両方�
 
 ---
 
-## 現在の状態（2026-08-10時点）
+## 現在の状態（2026-08-11時点）
 
-- バージョン：**v1.0.1（versionCode 17）**。ドメイン移行対応版をPlay Console製品版へ審査送信済み・結果待ち
-- Play Storeで公開中なのはv1.0.0（versionCode 16・2026-08-03正式公開）
+- バージョン：**v1.0.1（versionCode 17）がGoogle Playで公開中**（2026-08-11審査通過・自動公開）
 - 2026-08-10にドメインを`suneight-okayama.jp/kamneko/calendai/` →
   **`kamneko.com/calendai/`** へ移行。公開メールも`support@kamneko.com`へ変更
+- ストアに表示される連絡先は**アプリ単位（ストアの設定）とアカウント単位（デベロッパーの
+  メールアドレス）の2系統**あり、両方を更新しないと古い情報が残る（2026-08-11に対応済み）
+- `node_modules/`のGit追跡（4,270件）を解除済み（2026-08-11・b5f49f4）
 - 積み残し：Play Console推奨事項3件（エッジツーエッジ表示・非推奨API・R8）の実機目視確認
 - 詳細な作業履歴・引き継ぎ事項は `_local/CalenDai-devlog.md` を参照
