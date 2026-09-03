@@ -39,6 +39,13 @@ Google Play向けAndroid版（Capacitor）とWeb版（さくらVPS）の両方�
 
 **★併せて**：節を書き換えた指示が来たら、その節を写した場所（UIの文字列など）も直すこと。
 
+### モデル分担（回覧板 T-011）
+
+チャット（設計・判断・レビュー）は**Opus**、Claude Code（実装・コミット）は**Sonnet**が既定。
+`.claude/settings.local.json` に `"model": "sonnet"` を設定済み。
+書き込み・削除・移行など、間違えてもその場で気づけない工程だけ、その回に限りOpusへ上げる
+（詳細は `dev/_MODEL_SETUP.md`）。
+
 ---
 ## Environment
 
