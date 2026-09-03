@@ -6,7 +6,7 @@
 
 [![Web App](https://img.shields.io/badge/Web-kamneko.com-9e6b50)](https://kamneko.com/calendai/)
 [![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Web-green)](https://kamneko.com/)
-[![Version](https://img.shields.io/badge/Version-v0.10.14-blue)](https://github.com/kamneko88/calendai)
+[![Version](https://img.shields.io/badge/Version-v1.0.1-blue)](https://github.com/kamneko88/calendai)
 [![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red)](https://github.com/kamneko88/calendai)
 
 ---
@@ -159,17 +159,19 @@ npx cap sync
 | プラットフォーム | 状況 |
 |----------------|------|
 | Web版 | 🟢 公開中 |
-| Android版（Google Play） | 🔄 審査中 |
+| Android版（Google Play） | 🟢 公開中（v1.0.1） |
 | iOS版 | ❌ 予定なし |
 
 **Web版：** https://kamneko.com/calendai/
+**Android版：** Google Playで「CalenDai」を検索
 
 ---
 
 ## ロードマップ / Roadmap
 
-- [x] v0.10.x — React + Capacitor版（現行）
-- [ ] v1.0.0 — Google Play正式公開
+- [x] v0.10.x — React + Capacitor版
+- [x] v1.0.0 — Google Play正式公開（2026-07-31）
+- [x] v1.0.1 — 独自ドメイン移行（kamneko.com・現行）
 - [ ] v2.0.0 — Kotlin Native版（ネイティブUI・生体認証・プッシュ通知）
 
 ---
