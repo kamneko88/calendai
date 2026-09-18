@@ -150,13 +150,20 @@ C:\Apps\Android\Android Studio\jbr
 
 ---
 
-## 現在の状態（2026-08-11時点）
+## 現在の状態（2026-09-18時点）
 
-- バージョン：**v1.0.1（versionCode 17）がGoogle Playで公開中**（2026-08-11審査通過・自動公開）
+- バージョン：**v1.0.2（versionCode 18）がGoogle Playで公開中**（2026-09-04審査通過。
+  Android起動時の白画面バグ修正）。**v1.0.3（versionCode 19）は2026-09-18に
+  Play Console製品版トラックへ審査送信済み**（推奨事項3件対応＋不具合3件修正。結果待ち）
 - 2026-08-10にドメインを`suneight-okayama.jp/kamneko/calendai/` →
   **`kamneko.com/calendai/`** へ移行。公開メールも`support@kamneko.com`へ変更
 - ストアに表示される連絡先は**アプリ単位（ストアの設定）とアカウント単位（デベロッパーの
   メールアドレス）の2系統**あり、両方を更新しないと古い情報が残る（2026-08-11に対応済み）
 - `node_modules/`のGit追跡（4,270件）を解除済み（2026-08-11・b5f49f4）
-- Play Console推奨事項3件（エッジツーエッジ表示・非推奨API・R8）はすべて2026-09-18に対応済み（詳細はDev_note参照）。R8有効化後のGoogle Sign-In・生体認証の実機動作確認が積み残し
+- Play Console推奨事項3件（エッジツーエッジ表示・非推奨API・R8）はすべて2026-09-18に対応済み。R8有効化後のGoogle Sign-In・生体認証の実機動作確認は、v1.0.3審査通過後にあつのりさんが実施予定
+- `handleJump`／`extractYear`・`getAnnivText`／`fetchAnniversaryToday`の3件の未テスト・
+  UTC年ずれ不具合を2026-09-18に修正（vitest導入・自動テスト計52件）
+- **v2はiOS単独・フルネイティブ（Swift/SwiftUI）で新規開発する方針に決定（2026-09-18）**。
+  リポジトリを分離し`calendai2`（仮称）とする。v1（本リポジトリ）は積み残し対応後、
+  不具合サポートのみの保守フェーズへ移行
 - 詳細な作業履歴・引き継ぎ事項は `_local/CalenDai_Dev_note.md` を参照
