@@ -13,7 +13,8 @@
 // v1.0.0 (2026-07-31): Google Play製品版アクセス承認・初回正式リリース
 // v1.0.1 (2026-08-10): ドメイン変更対応（kamneko.com移行）・PP/利用規約リンクを新URLに更新
 // v1.0.2 (2026-09-04): Android版起動時の白画面バグ修正（.env.android未整備によりGoogle Client IDが空でビルドされていた）
-export const APP_VERSION = '1.0.2';
+// v1.0.3 (2026-09-18): Android 15エッジツーエッジ対応（MainActivity）・material依存を1.14.0へ更新（非推奨API呼び出し対応）
+export const APP_VERSION = '1.0.3';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
