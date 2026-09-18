@@ -1,3 +1,5 @@
+import { resolveEventYear } from './anniversary';
+
 // 日本の祝日カレンダーから指定月の祝日日付リストを取得
 export async function fetchJapaneseHolidays(accessToken, year, month) {
   const HOLIDAY_CAL_ID = 'ja.japanese#holiday@group.v.calendar.google.com';
@@ -195,8 +197,8 @@ export async function fetchAnniversaryToday(accessToken, anniversaryCalendarId, 
           );
           if (masterRes.ok) {
             const master = await masterRes.json();
-            const startDate = master.start?.date || master.start?.dateTime;
-            if (startDate) startYear = new Date(startDate).getFullYear();
+            const resolvedYear = resolveEventYear(master.start);
+            if (resolvedYear) startYear = resolvedYear;
           }
         } catch {}
       }

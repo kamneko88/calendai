@@ -17,6 +17,16 @@ export const ANNIV_KEYWORDS = [
   { words: ['放送開始'],         fmt: (n) => `放送開始${n}周年` },
 ];
 
+// イベント開始情報（Calendar APIのev.start形状: date/dateTimeのどちらかを持つ）から年を解決する
+// date-only（終日イベント）はnew Date()を経由するとローカルタイムゾーンによって年がずれるため
+// （"YYYY-MM-DD"はUTC深夜0時として解釈される）、文字列分割でタイムゾーンに依存せず取得する
+export function resolveEventYear(start) {
+  if (!start) return null;
+  if (start.date) return parseInt(start.date.split('-')[0], 10);
+  if (start.dateTime) return new Date(start.dateTime).getFullYear();
+  return null;
+}
+
 // 詳細欄から起算年（1900〜2099の最初の4桁数字）を抽出
 export function extractYear(description) {
   if (!description) return null;

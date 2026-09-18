@@ -1,5 +1,39 @@
 import { describe, it, expect } from 'vitest';
-import { extractYear, getAnnivText } from './anniversary';
+import { extractYear, getAnnivText, resolveEventYear } from './anniversary';
+
+describe('resolveEventYear - date-only（終日イベント）は文字列分割でタイムゾーン非依存', () => {
+  it('通常の年（1月1日起算）', () => {
+    expect(resolveEventYear({ date: '2020-01-01' })).toBe(2020);
+  });
+  it('年境界（12月31日起算）', () => {
+    expect(resolveEventYear({ date: '1999-12-31' })).toBe(1999);
+  });
+  it('うるう年の2月29日起算', () => {
+    expect(resolveEventYear({ date: '2020-02-29' })).toBe(2020);
+  });
+  it('4桁最小年（西暦0001年扱いのdate-only文字列）', () => {
+    expect(resolveEventYear({ date: '0001-06-15' })).toBe(1);
+  });
+});
+
+describe('resolveEventYear - dateTime（通常イベント）は従来通りnew Date().getFullYear()', () => {
+  it('タイムゾーンオフセット付きdateTime文字列', () => {
+    expect(resolveEventYear({ dateTime: '2020-01-01T09:00:00+09:00' })).toBe(2020);
+  });
+  it('UTC表記(Z)のdateTime文字列', () => {
+    expect(resolveEventYear({ dateTime: '2020-06-15T00:00:00Z' })).toBe(2020);
+  });
+});
+
+describe('resolveEventYear - 異常系', () => {
+  it('startが未指定の場合はnullを返す', () => {
+    expect(resolveEventYear(undefined)).toBeNull();
+    expect(resolveEventYear(null)).toBeNull();
+  });
+  it('date/dateTimeどちらも無い場合はnullを返す', () => {
+    expect(resolveEventYear({})).toBeNull();
+  });
+});
 
 describe('extractYear - 年境界', () => {
   it('1399はマッチしない', () => {
