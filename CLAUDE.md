@@ -111,6 +111,17 @@ Play Console操作・実機確認など人の目が要る工程は引き続き�
   （`.gitignore`で除外済み。2026-07-31に`calendai-release.jks`を公開リポジトリへ混入させた前例あり）
 - versionCodeは毎回のビルドで必ずインクリメントする
 
+### ★ヘッドレスでのリリースビルド時のJDK注意（2026-09-18実測）
+
+このマシンのJDK既定（Adoptium JDK 25）はGradle 8.14.3と非互換
+（`Unsupported class file major version 69`）。ヘッドレスでgradlewのリリースビルド
+（`bundleRelease`/`assembleRelease`等、R8処理を伴うもの）を回すときは、
+`JAVA_HOME`をAndroid Studio同梱のJBRに明示的に切り替えること。
+
+```
+C:\Apps\Android\Android Studio\jbr
+```
+
 ### バージョン管理ルール
 
 | 種別 | 上げ方 |
@@ -147,5 +158,5 @@ Play Console操作・実機確認など人の目が要る工程は引き続き�
 - ストアに表示される連絡先は**アプリ単位（ストアの設定）とアカウント単位（デベロッパーの
   メールアドレス）の2系統**あり、両方を更新しないと古い情報が残る（2026-08-11に対応済み）
 - `node_modules/`のGit追跡（4,270件）を解除済み（2026-08-11・b5f49f4）
-- 積み残し：Play Console推奨事項のうちR8（縮小・難読化）── 期限2027年2月。エッジツーエッジ表示・非推奨API使用の2件は2026-09-18に対応・実機確認済み（詳細はDev_note参照）
+- Play Console推奨事項3件（エッジツーエッジ表示・非推奨API・R8）はすべて2026-09-18に対応済み（詳細はDev_note参照）。R8有効化後のGoogle Sign-In・生体認証の実機動作確認が積み残し
 - 詳細な作業履歴・引き継ぎ事項は `_local/CalenDai_Dev_note.md` を参照
