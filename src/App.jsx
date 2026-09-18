@@ -5,6 +5,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { THEMES, CAL_COLORS, FONTS, APP_VERSION } from "./constants";
 import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents, fetchAnniversaryToday, fetchJapaneseHolidays, fetchMonthEvents } from "./api";
 import { getInitials, useWindowWidth, useSwipe } from "./hooks";
+import { resolveJumpTarget } from "./dateJump";
 import SplashScreen from "./components/SplashScreen";
 import LockScreen from "./components/LockScreen";
 import PinSetupScreen from "./components/PinSetupScreen";
@@ -438,30 +439,11 @@ export default function App() {
 
   const handleJump = () => {
     const right = curRight();
-    const y = jumpYear ? parseInt(jumpYear) : null;
-    const m = jumpMonth ? parseInt(jumpMonth) - 1 : null;
-    const d = jumpDay ? parseInt(jumpDay) : null;
-    // バリデーション
-    if (y !== null && (y < 1900 || y > 2100)) { alert('年は1900〜2100の範囲で入力してください'); return; }
-    if (m !== null && (m < 0 || m > 11)) { alert('月は1〜12の範囲で入力してください'); return; }
-    if (d !== null && (d < 1 || d > 31)) { alert('日は1〜31の範囲で入力してください'); return; }
-    // 存在しない日付チェック（閏年対応）
-    if (d !== null) {
-      const checkY = y !== null ? y : right.getFullYear();
-      const checkM = m !== null ? m : right.getMonth();
-      const testDate = new Date(checkY, checkM, d);
-      if (testDate.getDate() !== d) { alert('存在しない日付です'); return; }
-    }
-    let target;
-    if (y !== null && m !== null && d !== null) target = new Date(y, m, d);
-    else if (y !== null && m !== null) target = new Date(y, m, right.getDate());
-    else if (y !== null) target = new Date(y, right.getMonth(), right.getDate());
-    else if (m !== null && d !== null) target = new Date(right.getFullYear(), m, d);
-    else if (m !== null) target = new Date(right.getFullYear(), m, right.getDate());
-    else if (d !== null) target = new Date(right.getFullYear(), right.getMonth(), d);
-    else return;
-    setBaseYear(y !== null ? y : right.getFullYear());
-    const newBase = new Date(target); newBase.setDate(target.getDate() - (dayCount - 1));
+    const result = resolveJumpTarget(jumpYear, jumpMonth, jumpDay, right);
+    if (!result) return;
+    if (result.error) { alert(result.error); return; }
+    setBaseYear(result.year);
+    const newBase = new Date(result.target); newBase.setDate(result.target.getDate() - (dayCount - 1));
     setBase(newBase);
   };
 
