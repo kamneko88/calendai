@@ -12,7 +12,8 @@
 // v0.10.15 (2026-07-12): Web版ログイン処理にtry/catch追加（通信失敗時に画面が固まる不具合を修正）・未使用UserMenuインポート削除
 // v1.0.0 (2026-07-31): Google Play製品版アクセス承認・初回正式リリース
 // v1.0.1 (2026-08-10): ドメイン変更対応（kamneko.com移行）・PP/利用規約リンクを新URLに更新
-export const APP_VERSION = '1.0.1';
+// v1.0.2 (2026-09-04): Android版起動時の白画面バグ修正（.env.android未整備によりGoogle Client IDが空でビルドされていた）
+export const APP_VERSION = '1.0.2';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
