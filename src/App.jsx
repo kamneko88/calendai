@@ -903,6 +903,7 @@ export default function App() {
           accessToken={user.accessToken}
           selectedCalendars={selectedCalendars}
           editEvent={editEvent}
+          warekiDisplay={settings.warekiDisplay}
           onClose={() => setEditEvent(null)}
           onSaved={() => {
           // 保存した日付の月キャッシュをクリアして再取得

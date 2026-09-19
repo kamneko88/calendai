@@ -156,6 +156,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
           year={diaryModal.year}
           accessToken={accessToken}
           selectedCalendars={selectedCalendars}
+          warekiDisplay={warekiDisplay}
           onClose={() => setDiaryModal({ show: false, year: null })}
           onSaved={() => {
             setDiaryModal({ show: false, year: null });

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createCalendarEvent, updateCalendarEvent } from "../api";
 import { useModalAnimation } from "../hooks";
+import { toWareki } from "../wareki";
 
-export default function DiaryModal({ date, year, accessToken, selectedCalendars, editEvent, onClose, onSaved, theme }) {
+export default function DiaryModal({ date, year, accessToken, selectedCalendars, editEvent, onClose, onSaved, warekiDisplay, theme }) {
   const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const isEdit = !!editEvent;
   const [title, setTitle] = useState(isEdit ? editEvent.title : '');
@@ -12,7 +13,8 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
   const [error, setError] = useState('');
 
   const targetDate = isEdit ? editEvent.date : new Date(year, date.getMonth(), date.getDate());
-  const dateLabel = `${targetDate.getFullYear()}年${targetDate.getMonth() + 1}月${targetDate.getDate()}日`;
+  const yearLabel = warekiDisplay ? toWareki(targetDate).text : `${targetDate.getFullYear()}年`;
+  const dateLabel = `${yearLabel}${targetDate.getMonth() + 1}月${targetDate.getDate()}日`;
 
   const handleSave = async () => {
     if (!title.trim()) { setError('タイトルを入力してください'); return; }
