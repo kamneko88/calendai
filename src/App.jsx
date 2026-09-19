@@ -6,6 +6,7 @@ import { THEMES, CAL_COLORS, FONTS, APP_VERSION } from "./constants";
 import { fetchAllCalendars, fetchOldestEventYear, fetchTodayPastEvents, fetchAnniversaryToday, fetchJapaneseHolidays, fetchMonthEvents } from "./api";
 import { getInitials, useWindowWidth, useSwipe } from "./hooks";
 import { resolveJumpTarget } from "./dateJump";
+import { toWareki, warekiToSeireki, ERAS } from "./wareki";
 import SplashScreen from "./components/SplashScreen";
 import LockScreen from "./components/LockScreen";
 import PinSetupScreen from "./components/PinSetupScreen";
@@ -29,7 +30,7 @@ export default function App() {
       const saved = localStorage.getItem('myd_settings');
       if (saved) return JSON.parse(saved);
     } catch { }
-    return { stepNav: false, fontSize: 'small', defaultYearCount: 5, defaultDayCount: 2, theme: 'classic', fontFamily: 'gothic', todayBanner: true };
+    return { stepNav: false, fontSize: 'small', defaultYearCount: 5, defaultDayCount: 2, theme: 'classic', fontFamily: 'gothic', todayBanner: true, warekiDisplay: false };
   };
 
   const [user, setUser] = useState(null);
@@ -55,6 +56,8 @@ export default function App() {
   const [jumpYear, setJumpYear] = useState('');
   const [jumpMonth, setJumpMonth] = useState('');
   const [jumpDay, setJumpDay] = useState('');
+  const [jumpEra, setJumpEra] = useState('');
+  const [jumpEraYear, setJumpEraYear] = useState('');
   const [tokenExpired, setTokenExpired] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [showViewMenu, setShowViewMenu] = useState(false);
@@ -433,6 +436,7 @@ export default function App() {
     const d = new Date(today); d.setDate(today.getDate() - (dayCount - 1));
     setBase(d); setBaseYear(today.getFullYear());
     setJumpYear(''); setJumpMonth(''); setJumpDay('');
+    setJumpEra(''); setJumpEraYear('');
   };
 
   const curRight = () => { const d = new Date(base); d.setDate(base.getDate() + dayCount - 1); return d; };
@@ -518,10 +522,59 @@ export default function App() {
     }}
   />;
 
+  const arrowStyle = { padding: '0 4px', fontSize: '9px', border: '0.5px solid #ccc', borderRadius: '3px', cursor: 'pointer', background: '#fff', color: '#555', lineHeight: '14px' };
+
+  // 西暦での年入力欄（settings.warekiDisplayがfalseのときの既存動作そのまま）
+  const jumpYearField = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+      <input type="text" inputMode="numeric" placeholder="年" value={jumpYear}
+        onChange={e => setJumpYear(e.target.value.replace(/[^0-9-]/g, ''))}
+        onKeyDown={handleJumpYearKey}
+        style={{ ...inputStyle, width: isMobile ? '58px' : '68px' }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+        <button onClick={() => setJumpYear(String((jumpYear ? parseInt(jumpYear) : curRight().getFullYear()) + 1))} style={arrowStyle}>▲</button>
+        <button onClick={() => setJumpYear(String((jumpYear ? parseInt(jumpYear) : curRight().getFullYear()) - 1))} style={arrowStyle}>▼</button>
+      </div>
+      <span style={{ fontSize: '11px', color: '#bbb' }}>年</span>
+    </div>
+  );
+
+  // 和暦での年入力欄（元号セレクト＋和暦年）。西暦のjumpYearへ変換してセットするだけで、
+  // resolveJumpTarget/handleJump自体には触れない。
+  const currentWareki = toWareki(curRight());
+  const jumpEraValue = jumpEra || currentWareki.era || ERAS[ERAS.length - 1].name;
+  const jumpEraYearGetVal = () => jumpEraYear ? parseInt(jumpEraYear) : (currentWareki.eraYear ?? 1);
+  const applyWarekiJump = (era, eraYearNum) => {
+    const y = warekiToSeireki(era, eraYearNum);
+    if (y !== null) setJumpYear(String(y));
+  };
+  const jumpEraField = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+      <select value={jumpEraValue}
+        onChange={e => { setJumpEra(e.target.value); applyWarekiJump(e.target.value, jumpEraYearGetVal()); }}
+        style={{ ...inputStyle, width: isMobile ? '58px' : '68px' }}>
+        {ERAS.map(e => <option key={e.name} value={e.name}>{e.name}</option>)}
+      </select>
+      <input type="text" inputMode="numeric" placeholder="年" value={jumpEraYear}
+        onChange={e => {
+          const v = e.target.value.replace(/[^0-9]/g, '');
+          setJumpEraYear(v);
+          if (v) applyWarekiJump(jumpEraValue, parseInt(v));
+        }}
+        onKeyDown={e => { if (e.key === 'Enter') handleJump(); }}
+        style={{ ...inputStyle, width: '42px' }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+        <button onClick={() => { const v = jumpEraYearGetVal() + 1; setJumpEraYear(String(v)); applyWarekiJump(jumpEraValue, v); }} style={arrowStyle}>▲</button>
+        <button onClick={() => { const v = Math.max(jumpEraYearGetVal() - 1, 1); setJumpEraYear(String(v)); applyWarekiJump(jumpEraValue, v); }} style={arrowStyle}>▼</button>
+      </div>
+      <span style={{ fontSize: '11px', color: '#bbb' }}>年</span>
+    </div>
+  );
+
   const jumpRow = (
     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexWrap: 'wrap' }}>
+      {settings.warekiDisplay ? jumpEraField : jumpYearField}
       {[
-        { val: jumpYear, set: setJumpYear, placeholder: '年', width: isMobile ? '58px' : '68px', onKey: handleJumpYearKey, max: null, min: null, getVal: () => jumpYear ? parseInt(jumpYear) : curRight().getFullYear() },
         { val: jumpMonth, set: setJumpMonth, placeholder: '月', width: '42px', onKey: handleJumpMonthKey, max: 12, min: 1, getVal: () => jumpMonth ? parseInt(jumpMonth) : curRight().getMonth() + 1 },
         { val: jumpDay, set: setJumpDay, placeholder: '日', width: '42px', onKey: handleJumpDayKey, max: 31, min: 1, getVal: () => jumpDay ? parseInt(jumpDay) : curRight().getDate() },
       ].map(({ val, set, placeholder, width, onKey, max, min, getVal }) => (
@@ -531,10 +584,8 @@ export default function App() {
             onKeyDown={onKey}
             style={{ ...inputStyle, width }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-            <button onClick={() => set(String(max ? Math.min(getVal() + 1, max) : getVal() + 1))}
-              style={{ padding: '0 4px', fontSize: '9px', border: '0.5px solid #ccc', borderRadius: '3px', cursor: 'pointer', background: '#fff', color: '#555', lineHeight: '14px' }}>▲</button>
-            <button onClick={() => set(String(min ? Math.max(getVal() - 1, min) : getVal() - 1))}
-              style={{ padding: '0 4px', fontSize: '9px', border: '0.5px solid #ccc', borderRadius: '3px', cursor: 'pointer', background: '#fff', color: '#555', lineHeight: '14px' }}>▼</button>
+            <button onClick={() => set(String(max ? Math.min(getVal() + 1, max) : getVal() + 1))} style={arrowStyle}>▲</button>
+            <button onClick={() => set(String(min ? Math.max(getVal() - 1, min) : getVal() - 1))} style={arrowStyle}>▼</button>
           </div>
           <span style={{ fontSize: '11px', color: '#bbb' }}>{placeholder}</span>
         </div>
@@ -703,6 +754,7 @@ export default function App() {
         {days.map((d, i) => (
           <DayPage key={i} date={d} yearCount={yearCount} baseYear={d.getFullYear()}
             fontSize={settings.fontSize} isLast={i === days.length - 1}
+            warekiDisplay={settings.warekiDisplay}
             accessToken={user.accessToken} selectedCalendars={selectedCalendars}
             anniversaryCalendarId={anniversaryCalendarId}
             isPremium={isPremium}
@@ -892,6 +944,7 @@ export default function App() {
           event={selectedEvent}
           calendarName={calName(selectedEvent)}
           isPremium={isPremium}
+          warekiDisplay={settings.warekiDisplay}
           theme={theme}
           onEdit={() => {
             setEditEvent({
@@ -912,6 +965,7 @@ export default function App() {
           data={todayBannerData}
           today={today}
           theme={theme}
+          warekiDisplay={settings.warekiDisplay}
           onClose={() => setShowTodayBanner(false)}
         />
       )}

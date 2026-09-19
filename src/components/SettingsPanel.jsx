@@ -208,6 +208,25 @@ export default function SettingsPanel({
             </div>
           )}
 
+          {/* 和暦表示 */}
+          <div style={{ marginBottom: '22px' }}>
+            <div style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>和暦表示</div>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={settings.warekiDisplay || false}
+                onChange={e => onChange({ ...settings, warekiDisplay: e.target.checked })}
+                style={{ width: '16px', height: '16px', marginTop: '1px', flexShrink: 0 }}
+              />
+              <div>
+                <div style={{ fontSize: '13px', color: labelColor }}>年表示を和暦にする</div>
+                <div style={{ fontSize: '11px', color: subLabelColor, marginTop: '3px' }}>
+                  オン：明治以降の年表示が元号（令和7年など）になります
+                </div>
+              </div>
+            </label>
+          </div>
+
           {/* テーマ */}
           <div style={{ marginBottom: '22px' }}>
             <div style={{ fontSize: '10px', color: subLabelColor, letterSpacing: '.1em', marginBottom: '10px', textTransform: 'uppercase' }}>テーマ</div>

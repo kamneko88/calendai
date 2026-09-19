@@ -1,12 +1,14 @@
 import { Calendar, Clock, Pencil } from 'lucide-react';
 import { WDS } from "../constants";
 import { useModalAnimation } from "../hooks";
+import { toWareki } from "../wareki";
 
-export default function EventModal({ event, calendarName, onClose, onEdit, isPremium, theme }) {
+export default function EventModal({ event, calendarName, onClose, onEdit, isPremium, warekiDisplay, theme }) {
   const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   if (!event) return null;
   const d = new Date(event.year, event.month - 1, event.day);
-  const dateStr = `${event.year}年${event.month}月${event.day}日（${WDS[d.getDay()]}）`;
+  const yearLabel = warekiDisplay ? toWareki(d).text : `${event.year}年`;
+  const dateStr = `${yearLabel}${event.month}月${event.day}日（${WDS[d.getDay()]}）`;
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', ...overlayAnim }}

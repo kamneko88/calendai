@@ -1,6 +1,7 @@
 import { useModalAnimation } from '../hooks';
+import { toWareki } from '../wareki';
 
-export default function TodayInPastBanner({ data, today, theme, onClose }) {
+export default function TodayInPastBanner({ data, today, theme, onClose, warekiDisplay }) {
   const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const currentYear = today.getFullYear();
   const month = today.getMonth() + 1;
@@ -100,7 +101,7 @@ export default function TodayInPastBanner({ data, today, theme, onClose }) {
                     marginBottom: '8px',
                     display: 'flex', alignItems: 'center', gap: '8px',
                   }}>
-                    <span>{year}年</span>
+                    <span>{warekiDisplay ? toWareki(new Date(year, month - 1, day)).text : `${year}年`}</span>
                     <span style={{ fontSize: '10px', fontWeight: '500', color: theme.subColor, fontFamily: 'monospace' }}>
                       {currentYear - year}年前
                     </span>

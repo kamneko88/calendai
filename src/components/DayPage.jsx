@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { WDS, FS } from "../constants";
 import { fetchCalendarEvents } from "../api";
 import { getAnnivText } from "../anniversary";
+import { toWareki } from "../wareki";
 import DiaryModal from "./DiaryModal";
 
-export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, tokenExpired, globalRefreshKey, holidayCache = {}, eventCache = {}, onDiarySaved, theme }) {
+export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, accessToken, selectedCalendars, anniversaryCalendarId, isPremium, isMobile, onEventClick, onTokenExpired, tokenExpired, globalRefreshKey, holidayCache = {}, eventCache = {}, onDiarySaved, warekiDisplay, theme }) {
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
   const fs = FS[fontSize];
@@ -115,7 +116,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
             <div
               onClick={() => isPremium && isCur && setDiaryModal({ show: true, year: y })}
               style={{ width: isMobile ? '46px' : '64px', flexShrink: 0, paddingRight: '8px', paddingTop: '1px', cursor: isPremium && isCur ? 'pointer' : 'default' }}>
-              <span style={{ fontSize: `${isMobile ? fs.yearNum * 0.85 : fs.yearNum}px`, fontWeight: '500', color: isCur ? theme.currentYearColor : theme.pastYearColor, display: 'block', fontFamily: 'monospace' }}>{y}</span>
+              <span style={{ fontSize: `${isMobile ? fs.yearNum * 0.85 : fs.yearNum}px`, fontWeight: '500', color: isCur ? theme.currentYearColor : theme.pastYearColor, display: 'block', fontFamily: 'monospace' }}>{warekiDisplay ? toWareki(pd).text : y}</span>
               <span style={{ fontSize: '9px', color: theme.subColor, display: 'block', marginTop: '2px' }}>{pwd}</span>
               {isPremium && isCur && (
                 <span style={{ fontSize: '9px', color: theme.subColor, display: 'block', marginTop: '3px', opacity: 0.5 }}>✏</span>
