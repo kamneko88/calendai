@@ -84,14 +84,12 @@ export async function fetchOldestEventYear(accessToken) {
       // 繰り返しイベント・終日イベント（誕生日等）を除外して通常イベントのみ対象
       const normal = data.items.filter(ev => !ev.recurringEventId && ev.start.dateTime);
       if (normal.length > 0) {
-        const oldest = normal[0].start.dateTime;
-        return new Date(oldest).getFullYear();
+        return resolveEventYear(normal[0].start);
       }
       // 通常イベントがなければ終日イベントも含めて再チェック（繰り返しは除外）
       const nonRecurring = data.items.filter(ev => !ev.recurringEventId);
       if (nonRecurring.length > 0) {
-        const oldest = nonRecurring[0].start.dateTime || nonRecurring[0].start.date;
-        return new Date(oldest).getFullYear();
+        return resolveEventYear(nonRecurring[0].start);
       }
     }
   } catch { }
