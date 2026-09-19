@@ -112,13 +112,13 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
         return (
           <div key={y} style={{ display: 'flex', minHeight: `${isMobile ? fs.rowMin * 0.85 : fs.rowMin}px`, borderBottom: `0.5px solid ${theme.rowBorder}`, background: isCur ? theme.currentRowBg : 'transparent', margin: isCur ? '0 -4px' : '0', padding: isCur ? '8px 4px' : '8px 0', borderRadius: isCur ? '4px' : '0' }}>
 
-            {/* 左：年・曜日・✏アイコン（PRO・baseYearのみタップ可） */}
+            {/* 左：年・曜日・✏アイコン（PROなら全年タップ可） */}
             <div
-              onClick={() => isPremium && isCur && setDiaryModal({ show: true, year: y })}
-              style={{ width: isMobile ? '46px' : '64px', flexShrink: 0, paddingRight: '8px', paddingTop: '1px', cursor: isPremium && isCur ? 'pointer' : 'default' }}>
+              onClick={() => isPremium && setDiaryModal({ show: true, year: y })}
+              style={{ width: isMobile ? '46px' : '64px', flexShrink: 0, paddingRight: '8px', paddingTop: '1px', cursor: isPremium ? 'pointer' : 'default' }}>
               <span style={{ fontSize: `${isMobile ? fs.yearNum * 0.85 : fs.yearNum}px`, fontWeight: '500', color: isCur ? theme.currentYearColor : theme.pastYearColor, display: 'block', fontFamily: 'monospace' }}>{warekiDisplay ? toWareki(pd).text : y}</span>
               <span style={{ fontSize: '9px', color: theme.subColor, display: 'block', marginTop: '2px' }}>{pwd}</span>
-              {isPremium && isCur && (
+              {isPremium && (
                 <span style={{ fontSize: '9px', color: theme.subColor, display: 'block', marginTop: '3px', opacity: 0.5 }}>✏</span>
               )}
             </div>
