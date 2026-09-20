@@ -18,7 +18,9 @@ import DayPage from "./components/DayPage";
 import AnniversaryTab from "./components/AnniversaryTab";
 import { Settings, LogOut, Star, Clock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
+import { shouldRelockOnResume } from "./lockTiming";
 
 export default function App() {
   const today = new Date();
@@ -79,6 +81,7 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [todayBannerData, setTodayBannerData] = useState([]);
   const bannerCheckedRef = useRef(false);
+  const backgroundedAtRef = useRef(null);
   const theme = THEMES[settings.theme] || THEMES.classic;
   const viewMenuRef = useRef(null);
   const [pinToastType, setPinToastType] = useState(null);
@@ -132,6 +135,27 @@ export default function App() {
     const h = (e) => { if (viewMenuRef.current && !viewMenuRef.current.contains(e.target)) setShowViewMenu(false); };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  // バックグラウンド復帰時の再ロック（5分の猶予付き）
+  useEffect(() => {
+    const listenerPromise = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive) {
+        backgroundedAtRef.current = Date.now();
+        return;
+      }
+      const relock = shouldRelockOnResume(backgroundedAtRef.current, Date.now());
+      backgroundedAtRef.current = null;
+      if (!relock) return;
+      try {
+        const savedSettings = localStorage.getItem('myd_settings');
+        const s = savedSettings ? JSON.parse(savedSettings) : null;
+        if (s && s.lockEnabled && localStorage.getItem('myd_pin') && localStorage.getItem('myd_user')) {
+          setIsLocked(true);
+        }
+      } catch { }
+    });
+    return () => { listenerPromise.then(listener => listener.remove()); };
   }, []);
 
   useEffect(() => {
