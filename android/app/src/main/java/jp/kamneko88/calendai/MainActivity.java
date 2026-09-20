@@ -1,9 +1,11 @@
 package jp.kamneko88.calendai;
 
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -20,9 +22,12 @@ public class MainActivity extends BridgeActivity {
                 throw new RuntimeException("Test Crash");
             }
         });
-        addContentView(crashButton, new ViewGroup.LayoutParams(
+        FrameLayout.LayoutParams crashButtonParams = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        crashButtonParams.topMargin = 400;
+        crashButtonParams.gravity = Gravity.TOP;
+        addContentView(crashButton, crashButtonParams);
     }
     // ▲▲▲ ここまで一時コード ▲▲▲
 }
