@@ -82,6 +82,13 @@ export default function App() {
   const [todayBannerData, setTodayBannerData] = useState([]);
   const bannerCheckedRef = useRef(false);
   const backgroundedAtRef = useRef(null);
+  // 日記モーダル・イベントモーダルが開いているかどうか（appStateChangeのリスナーは
+  // 初回マウント時に1回だけ登録されるクロージャのため、editEvent/selectedEventを
+  // 直接参照すると古い値のままになる。そのため最新値をrefに反映させて参照する）
+  const hasOpenModalRef = useRef(false);
+  // モーダル表示中にバックグラウンド復帰の再ロック判定が出た場合、
+  // モーダルが閉じるまでロックを保留していることを示すフラグ
+  const pendingRelockRef = useRef(false);
   const theme = THEMES[settings.theme] || THEMES.classic;
   const viewMenuRef = useRef(null);
   const [pinToastType, setPinToastType] = useState(null);
@@ -137,7 +144,21 @@ export default function App() {
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  // バックグラウンド復帰時の再ロック（5分の猶予付き）
+  // 日記モーダル・イベントモーダルの開閉状態をrefに反映（appStateChangeのリスナーから
+  // 最新値を参照できるようにするため）。あわせて、両方閉じたタイミングで
+  // 保留中の再ロックがあれば適用する
+  useEffect(() => {
+    hasOpenModalRef.current = !!(editEvent || selectedEvent);
+    if (!hasOpenModalRef.current && pendingRelockRef.current) {
+      pendingRelockRef.current = false;
+      setIsLocked(true);
+    }
+  }, [editEvent, selectedEvent]);
+
+  // バックグラウンド復帰時の再ロック（5分の猶予付き）。
+  // ただし日記モーダル・イベントモーダルが開いている間は、未保存の入力が
+  // 消えてしまう（早期returnでモーダルがアンマウントされる）ため即座にはロックせず、
+  // pendingRelockRefに保留し、モーダルが閉じたタイミングでロックを適用する
   useEffect(() => {
     const listenerPromise = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
       if (!isActive) {
@@ -151,7 +172,11 @@ export default function App() {
         const savedSettings = localStorage.getItem('myd_settings');
         const s = savedSettings ? JSON.parse(savedSettings) : null;
         if (s && s.lockEnabled && localStorage.getItem('myd_pin') && localStorage.getItem('myd_user')) {
-          setIsLocked(true);
+          if (hasOpenModalRef.current) {
+            pendingRelockRef.current = true;
+          } else {
+            setIsLocked(true);
+          }
         }
       } catch { }
     });
