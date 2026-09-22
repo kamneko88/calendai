@@ -1,20 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { App as CapacitorApp } from '@capacitor/app';
 import { createCalendarEvent, updateCalendarEvent } from "../api";
 import { useModalAnimation } from "../hooks";
 import { toWareki } from "../wareki";
+import { saveDraft, loadDraft, clearDraft } from "../diaryDraft";
 
 export default function DiaryModal({ date, year, accessToken, selectedCalendars, editEvent, onClose, onSaved, warekiDisplay, theme }) {
   const { close, overlayAnim, contentAnim } = useModalAnimation(onClose);
   const isEdit = !!editEvent;
-  const [title, setTitle] = useState(isEdit ? editEvent.title : '');
-  const [description, setDescription] = useState(isEdit ? editEvent.description : '');
+
+  const targetDate = isEdit ? editEvent.date : new Date(year, date.getMonth(), date.getDate());
+  const draft = loadDraft(targetDate, editEvent?.id);
+
+  const [title, setTitle] = useState(draft ? draft.title : (isEdit ? editEvent.title : ''));
+  const [description, setDescription] = useState(draft ? draft.description : (isEdit ? editEvent.description : ''));
   const [calendarId, setCalendarId] = useState(isEdit ? editEvent.calendarId : (selectedCalendars[0]?.id || ''));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [restoredFromDraft] = useState(!!draft);
 
-  const targetDate = isEdit ? editEvent.date : new Date(year, date.getMonth(), date.getDate());
   const yearLabel = warekiDisplay ? toWareki(targetDate).text : `${targetDate.getFullYear()}年`;
   const dateLabel = `${yearLabel}${targetDate.getMonth() + 1}月${targetDate.getDate()}日`;
+
+  const draftFieldsRef = useRef({ title, description });
+  draftFieldsRef.current = { title, description };
+
+  useEffect(() => {
+    const listenerPromise = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) return;
+      const { title: currentTitle, description: currentDescription } = draftFieldsRef.current;
+      saveDraft(targetDate, editEvent?.id, currentTitle, currentDescription);
+    });
+    return () => { listenerPromise.then(listener => listener.remove()); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCancel = () => {
+    clearDraft(targetDate, editEvent?.id);
+    close();
+  };
 
   const handleSave = async () => {
     if (!title.trim()) { setError('タイトルを入力してください'); return; }
@@ -27,6 +51,7 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
       } else {
         await createCalendarEvent(accessToken, calendarId, targetDate, title.trim(), description.trim());
       }
+      clearDraft(targetDate, editEvent?.id);
       onSaved();
       onClose();
     } catch (e) {
@@ -37,7 +62,7 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 3500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', ...overlayAnim }}
-      onClick={e => { if (e.target === e.currentTarget) close(); }}>
+      onClick={e => { if (e.target === e.currentTarget) handleCancel(); }}>
       <div style={{ background: theme.pageBg, borderRadius: '12px', width: '100%', maxWidth: '360px', border: `0.5px solid ${theme.pageBorder}`, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', overflow: 'hidden', ...contentAnim }}>
 
         {/* ヘッダー */}
@@ -46,7 +71,7 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
             <div style={{ fontSize: '10px', color: theme.monthColor, letterSpacing: '.1em', textTransform: 'uppercase' }}>{isEdit ? 'edit diary' : 'diary'}</div>
             <div style={{ fontSize: '15px', fontWeight: '500', color: theme.dateColor }}>{dateLabel}</div>
           </div>
-          <button onClick={close} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: theme.subColor, lineHeight: 1 }}>×</button>
+          <button onClick={handleCancel} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: theme.subColor, lineHeight: 1 }}>×</button>
         </div>
 
         {/* フォーム */}
@@ -75,6 +100,9 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
               rows={4}
               style={{ width: '100%', padding: '8px 10px', fontSize: '13px', border: `0.5px solid ${theme.pageBorder}`, borderRadius: '6px', background: theme.headerBg, color: theme.dateColor, outline: 'none', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
             />
+            {restoredFromDraft && (
+              <div style={{ fontSize: '11px', color: theme.subColor, marginTop: '4px' }}>前回入力した内容を復元しました</div>
+            )}
           </div>
 
           {/* カレンダー選択（新規作成時のみ） */}
@@ -99,7 +127,7 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
 
           {/* ボタン */}
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={close}
+            <button onClick={handleCancel}
               style={{ flex: 1, padding: '10px', border: `0.5px solid ${theme.btnBorder}`, borderRadius: '7px', cursor: 'pointer', background: 'transparent', color: theme.btnColor, fontSize: '13px' }}>
               キャンセル
             </button>
