@@ -13,6 +13,7 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
   const [anniversaryEvents, setAnniversaryEvents] = useState([]);
   const [diaryModal, setDiaryModal] = useState({ show: false, year: null });
   const [refreshKey, setRefreshKey] = useState(0);
+  const [expandedAnniv, setExpandedAnniv] = useState({});
 
   const mo = date.getMonth();
   const dy = date.getDate();
@@ -71,6 +72,10 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
     return () => { cancelled = true; };
   }, [accessToken, anniversaryCalendarId, mo, dy]);
 
+  useEffect(() => {
+    setExpandedAnniv({});
+  }, [date]);
+
   return (
     <div style={{ flex: 1, padding: isMobile ? '10px' : '14px 16px', borderRight: isLast ? 'none' : `2px solid ${theme.pageBorder}`, minWidth: 0, background: theme.pageBg }}>
       <div style={{ paddingBottom: '8px', borderBottom: `1.5px solid ${theme.pageHeaderBorder}` }}>
@@ -91,11 +96,26 @@ export default function DayPage({ date, yearCount, baseYear, fontSize, isLast, a
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: '2px', flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '8px', letterSpacing: '.14em', color: theme.monthColor, marginBottom: '3px' }}>ANNIVERSARY</div>
             {anniversaryEvents.length > 0 ? (
-              anniversaryEvents.map((ev, i) => (
-                <div key={i} style={{ fontSize: '10px', color: theme.eventColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'left' }}>
-                  {getAnnivText(ev.t, ev.description, today.getFullYear())}
-                </div>
-              ))
+              anniversaryEvents.map((ev, i) => {
+                const isExpanded = !!expandedAnniv[i];
+                return (
+                  <div
+                    key={i}
+                    onClick={() => setExpandedAnniv(prev => ({ ...prev, [i]: !prev[i] }))}
+                    style={{
+                      fontSize: '10px',
+                      color: theme.eventColor,
+                      overflow: isExpanded ? 'visible' : 'hidden',
+                      textOverflow: isExpanded ? 'unset' : 'ellipsis',
+                      whiteSpace: isExpanded ? 'normal' : 'nowrap',
+                      width: '100%',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}>
+                    {getAnnivText(ev.t, ev.description, today.getFullYear())}
+                  </div>
+                );
+              })
             ) : (
               <div style={{ fontSize: '9px', color: theme.emptyColor, textAlign: 'left' }}>—</div>
             )}
