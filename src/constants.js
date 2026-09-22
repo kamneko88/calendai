@@ -15,8 +15,8 @@
 // v1.0.2 (2026-09-04): Android版起動時の白画面バグ修正（.env.android未整備によりGoogle Client IDが空でビルドされていた）
 // v1.0.3 (2026-09-18): Android 15エッジツーエッジ対応（MainActivity）・material依存を1.14.0へ更新（非推奨API呼び出し対応）
 // v1.1.0RC1 (2026-09-21): Crashlytics導入・未使用生体認証ライブラリ削除・PINロックのバックグラウンド復帰対応（5分猶予）
-// v1.1.0RC2 (2026-09-22): 日記モーダルの未保存入力をバックグラウンド復帰時に下書き保存（OSのプロセスキル対策）
-export const APP_VERSION = '1.1.0RC2';
+// v1.1.1 (2026-09-22): 日記モーダルの未保存入力をバックグラウンド復帰時に下書き保存（OSのプロセスキル対策）。製品トラックへ直接提出
+export const APP_VERSION = '1.1.1';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
