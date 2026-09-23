@@ -16,7 +16,8 @@
 // v1.0.3 (2026-09-18): Android 15エッジツーエッジ対応（MainActivity）・material依存を1.14.0へ更新（非推奨API呼び出し対応）
 // v1.1.0RC1 (2026-09-21): Crashlytics導入・未使用生体認証ライブラリ削除・PINロックのバックグラウンド復帰対応（5分猶予）
 // v1.1.1 (2026-09-22): 日記モーダルの未保存入力をバックグラウンド復帰時に下書き保存（OSのプロセスキル対策）。製品トラックへ直接提出
-export const APP_VERSION = '1.1.1';
+// v1.1.2 (2026-09-23): 記念日欄をタップで展開表示できるように対応（狭い画面幅での省略対策）。PINロックのモーダル中の挙動についてリリースノートに追記
+export const APP_VERSION = '1.1.2';
 export const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 export const WDS = ['日', '月', '火', '水', '木', '金', '土'];
 export const CAL_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
