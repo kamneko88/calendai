@@ -70,6 +70,9 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
           <div>
             <div style={{ fontSize: '10px', color: theme.monthColor, letterSpacing: '.1em', textTransform: 'uppercase' }}>{isEdit ? 'edit diary' : 'diary'}</div>
             <div style={{ fontSize: '15px', fontWeight: '500', color: theme.dateColor }}>{dateLabel}</div>
+            {restoredFromDraft && (
+              <div style={{ fontSize: '11px', color: theme.subColor, marginTop: '4px' }}>前回入力した内容を復元しました</div>
+            )}
           </div>
           <button onClick={handleCancel} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: theme.subColor, lineHeight: 1 }}>×</button>
         </div>
@@ -100,9 +103,6 @@ export default function DiaryModal({ date, year, accessToken, selectedCalendars,
               rows={4}
               style={{ width: '100%', padding: '8px 10px', fontSize: '13px', border: `0.5px solid ${theme.pageBorder}`, borderRadius: '6px', background: theme.headerBg, color: theme.dateColor, outline: 'none', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
             />
-            {restoredFromDraft && (
-              <div style={{ fontSize: '11px', color: theme.subColor, marginTop: '4px' }}>前回入力した内容を復元しました</div>
-            )}
           </div>
 
           {/* カレンダー選択（新規作成時のみ） */}
